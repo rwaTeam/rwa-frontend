@@ -12,13 +12,13 @@
 </template>
 
 <script setup lang="ts">
-import Hero from '~/components/Hero.vue'
-import ProblemVision from '~/components/ProblemVision.vue'
-import HowItWorks from '~/components/HowItWorks.vue'
-import ValueProposition from '~/components/ValueProposition.vue'
-import Insurance from '~/components/Insurance.vue'
-import FeaturedAssets from '~/components/FeaturedAssets.vue'
-import About from '~/components/About.vue'
-import Footer from '~/components/Footer.vue'
+import Hero from '~/components/home/Hero.vue'
+import ProblemVision from '~/components/home/ProblemVision.vue'
+import HowItWorks from '~/components/home/HowItWorks.vue'
+import ValueProposition from '~/components/home/ValueProposition.vue'
+import Insurance from '~/components/home/Insurance.vue'
+import FeaturedAssets from '~/components/home/FeaturedAssets.vue'
+import About from '~/components/home/About.vue'
+import Footer from '~/components/home/Footer.vue'
 </script>
 

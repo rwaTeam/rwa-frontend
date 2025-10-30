@@ -15,10 +15,10 @@
         class="text-center mb-20"
       >
         <h2 class="text-4xl lg:text-5xl text-foreground mb-4">
-          How It Works
+          運作方式
         </h2>
         <p class="text-xl text-foreground/70 max-w-3xl mx-auto">
-          A transparent, automated process from investment to returns
+          從投資到收益的透明自動化流程
         </p>
       </div>
 
@@ -92,7 +92,7 @@
             <rect x="14" y="14" width="7" height="7" stroke-width="2" />
             <rect x="3" y="14" width="7" height="7" stroke-width="2" />
           </svg>
-          <span>Powered by blockchain transparency & smart contract automation</span>
+          <span>以區塊鏈透明度與智慧合約自動化為後盾</span>
         </div>
       </div>
     </div>
@@ -105,26 +105,26 @@ import { Wallet, Sprout, Radio, Coins } from 'lucide-vue-next'
 const steps = [
   {
     icon: Wallet,
-    title: 'Funding',
-    description: 'Investors fund tokenized agricultural projects through smart contracts',
+    title: '資金投入',
+    description: '投資人透過智慧合約為代幣化的農業專案提供資金',
     color: '#1E3A5F',
   },
   {
     icon: Sprout,
-    title: 'Deployment',
-    description: 'Capital builds climate-resilient infrastructure like typhoon-resistant greenhouses',
+    title: '建置設施',
+    description: '資金用於建造抗氣候基礎設施，例如抗颱溫室',
     color: '#16B36D',
   },
   {
     icon: Radio,
-    title: 'Oracle',
-    description: 'Real-time harvest data verified through IoT sensors and oracle networks',
+    title: '預言機驗證',
+    description: '透過 IoT 感測器與預言機網路驗證即時收成數據',
     color: '#FDBA45',
   },
   {
     icon: Coins,
-    title: 'Distribution',
-    description: 'Revenue automatically distributed to token holders based on actual yields',
+    title: '收益分配',
+    description: '根據實際產量自動分配收益給代幣持有者',
     color: '#16B36D',
   },
 ]

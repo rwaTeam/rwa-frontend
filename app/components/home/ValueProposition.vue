@@ -8,10 +8,10 @@
         class="text-center mb-20"
       >
         <h2 class="text-4xl lg:text-5xl text-foreground mb-4">
-          A Three-Way Win
+          三方共贏
         </h2>
         <p class="text-xl text-foreground/70 max-w-3xl mx-auto">
-          Creating value for every participant in the sustainable agriculture ecosystem
+          為永續農業生態系中的每位參與者創造價值
         </p>
       </div>
 
@@ -88,11 +88,11 @@
       >
         <div class="bg-gradient-to-r from-primary to-secondary rounded-3xl p-12 text-white">
           <p class="text-2xl lg:text-3xl mb-6 leading-relaxed">
-            "By aligning financial incentives with environmental sustainability, we create lasting impact for communities and the planet."
+            「結合金融誘因與環境永續，我們為社區與地球創造長遠影響。」
           </p>
           <div class="flex items-center justify-center gap-2 text-white/80">
             <div class="w-12 h-0.5 bg-white/50" />
-            <span>GreenFi Labs Mission</span>
+            <span>GreenFi Labs 使命</span>
             <div class="w-12 h-0.5 bg-white/50" />
           </div>
         </div>
@@ -107,37 +107,37 @@ import { Users, TrendingUp, Globe } from 'lucide-vue-next'
 const stakeholders = [
   {
     icon: Users,
-    title: 'For Farmers',
+    title: '對農民',
     color: '#16B36D',
     benefits: [
-      'Zero upfront infrastructure costs',
-      'Revenue-share model only after harvest',
-      'Protection against climate disasters',
-      'Access to modern farming technology',
+      '零前期基礎設施成本',
+      '採用收成後才分潤的模式',
+      '提供氣候災害保護',
+      '取得現代化農業技術',
     ],
     image: 'https://images.unsplash.com/photo-1680725659623-0b1f36187924?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmVlbmhvdXNlJTIwYWdyaWN1bHR1cmV8ZW58MXx8fHwxNzYxNjIwMjc4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
   },
   {
     icon: TrendingUp,
-    title: 'For Investors',
+    title: '對投資者',
     color: '#1E3A5F',
     benefits: [
-      'Insurance-backed investment security',
-      'Transparent on-chain yield tracking',
-      'Diversified agricultural portfolio',
-      'ESG-aligned impact investing',
+      '保險擔保的投資安全性',
+      '透明的鏈上收益追蹤',
+      '多元化農業投資組合',
+      '符合 ESG 的影響力投資',
     ],
     image: 'https://images.unsplash.com/photo-1644343262170-e40d72e19a84?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxibG9ja2NoYWluJTIwdGVjaG5vbG9neSUyMG5ldHdvcmt8ZW58MXx8fHwxNzYxNTg0MzcyfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
   },
   {
     icon: Globe,
-    title: 'For the Ecosystem',
+    title: '對生態系',
     color: '#FDBA45',
     benefits: [
-      'Strengthened food supply chains',
-      'Accelerated climate adaptation',
-      'Rural economic development',
-      'Sustainable agriculture scaling',
+      '強化糧食供應鏈',
+      '加速氣候調適',
+      '帶動鄉村經濟發展',
+      '擴大永續農業規模',
     ],
     image: 'https://images.unsplash.com/photo-1761455953103-788d1018f174?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdXN0YWluYWJsZSUyMGZhcm1pbmclMjBtb2Rlcm58ZW58MXx8fHwxNzYxNjYzNjc2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
   },

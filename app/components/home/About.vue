@@ -19,16 +19,16 @@
           <div>
             <div class="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
               <Leaf class="w-5 h-5 text-primary" />
-              <span class="text-primary">About GreenFi Labs</span>
+              <span class="text-primary">關於 GreenFi Labs</span>
             </div>
             <h2 class="text-4xl lg:text-5xl text-foreground mb-6">
-              Building the Future of <span class="text-primary">AgriFinance</span>
+              打造<span class="text-primary">農業金融</span>的未來
             </h2>
             <p class="text-xl text-foreground/70 leading-relaxed mb-6">
-              GreenFi Labs is pioneering the intersection of decentralized finance and sustainable agriculture. Our SafeHarvest Protocol combines blockchain transparency with real-world agricultural infrastructure to create resilient, profitable farming ecosystems.
+              GreenFi Labs 開創去中心化金融與永續農業的交會點。我們的 SafeHarvest 協議結合區塊鏈透明度與真實世界的農業基礎建設，創造具韌性且獲利的農業生態系統。
             </p>
             <p class="text-lg text-foreground/70 leading-relaxed">
-              We believe that technology should empower nature, not replace it. By tokenizing future agricultural revenue rights, we enable farmers to access capital without debt while offering investors transparent, ESG-aligned opportunities backed by real assets.
+              我們相信科技應該賦能自然，而非取代自然。透過代幣化未來農業收益權，我們讓農民無需負債即可取得資金，同時為投資者提供透明、符合 ESG 且由實體資產支持的投資機會。
             </p>
           </div>
 
@@ -57,7 +57,7 @@
             class="border-2 border-secondary text-secondary hover:bg-secondary hover:text-white rounded-xl group"
           >
             <FileText class="mr-2 w-5 h-5" />
-            Read the Whitepaper
+            閱讀白皮書
           </Button>
         </div>
 
@@ -72,7 +72,7 @@
           <div class="relative rounded-3xl overflow-hidden shadow-2xl">
             <img
               src="https://images.unsplash.com/photo-1761455953103-788d1018f174?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdXN0YWluYWJsZSUyMGZhcm1pbmclMjBtb2Rlcm58ZW58MXx8fHwxNzYxNjYzNjc2fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-              alt="Sustainable Farming"
+              alt="永續農業"
               class="w-full h-96 object-cover"
             >
             <div class="absolute inset-0 bg-gradient-to-t from-foreground via-transparent to-transparent" />
@@ -83,16 +83,16 @@
                     <div class="text-3xl text-primary mb-1">
                       500+
                     </div>
-                    <div class="text-sm text-foreground/70">
-                      Hectares Protected
+              <div class="text-sm text-foreground/70">
+                      受保護公頃數
                     </div>
                   </div>
                   <div>
                     <div class="text-3xl text-accent mb-1">
                       2,800
                     </div>
-                    <div class="text-sm text-foreground/70">
-                      Farmers Supported
+              <div class="text-sm text-foreground/70">
+                      受支持農民
                     </div>
                   </div>
                 </div>
@@ -112,7 +112,7 @@
                 $8.2M
               </div>
               <div class="text-sm text-white/90">
-                Infrastructure Funded
+                基礎建設資金
               </div>
             </div>
             <div
@@ -125,7 +125,7 @@
                 13.2%
               </div>
               <div class="text-sm text-white/90">
-                Avg. Annual Return
+                平均年回報率
               </div>
             </div>
           </div>
@@ -142,11 +142,11 @@ import Button from '~/components/ui/button/Button.vue'
 const missionPoints = [
   {
     icon: Target,
-    text: 'Mission: Accelerate climate-resilient agriculture through Web3 innovation',
+    text: '使命：透過 Web3 創新加速氣候韌性農業',
   },
   {
     icon: Leaf,
-    text: 'Vision: A world where sustainable farming is the most profitable choice',
+    text: '願景：讓永續農業成為最具獲利的選擇',
   },
 ]
 </script>

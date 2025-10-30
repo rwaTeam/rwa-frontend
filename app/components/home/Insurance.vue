@@ -21,13 +21,13 @@
       >
         <div class="inline-flex items-center gap-2 bg-primary/20 px-4 py-2 rounded-full mb-4">
           <Shield class="w-5 h-5 text-primary" />
-          <span class="text-primary">Capital Protection</span>
+          <span class="text-primary">資本保障</span>
         </div>
         <h2 class="text-4xl lg:text-5xl text-white mb-4">
-          Insurance-Backed Risk Management
+          保險支持的風險管理
         </h2>
         <p class="text-xl text-white/80 max-w-3xl mx-auto">
-          Every investment is protected through comprehensive insurance coverage from Taiwan's leading insurers
+          每筆投資皆由臺灣領先保險公司提供完整的保障護航
         </p>
       </div>
 
@@ -71,10 +71,10 @@
             <div class="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6">
               <div class="flex items-center gap-3 mb-2">
                 <CheckCircle2 class="w-6 h-6 text-white" />
-                <span class="text-white">Layer 1: Primary Insurance</span>
+                <span class="text-white">第一層：主要保險</span>
               </div>
               <p class="text-white/80 text-sm">
-                Coverage for typhoon, flood, and crop failure events
+                保障範圍涵蓋颱風、淹水與作物歉收等事件
               </p>
             </div>
 
@@ -89,10 +89,10 @@
             <div class="bg-gradient-to-r from-accent to-accent/80 rounded-2xl p-6">
               <div class="flex items-center gap-3 mb-2">
                 <CheckCircle2 class="w-6 h-6 text-foreground" />
-                <span class="text-foreground">Layer 2: Smart Contract Escrow</span>
+                <span class="text-foreground">第二層：智慧合約託管</span>
               </div>
               <p class="text-foreground/80 text-sm">
-                Automated fund release based on oracle data verification
+                依據預言機數據驗證，自動發放資金
               </p>
             </div>
 
@@ -107,10 +107,10 @@
             <div class="bg-gradient-to-r from-white/20 to-white/10 rounded-2xl p-6 border border-white/30">
               <div class="flex items-center gap-3 mb-2">
                 <CheckCircle2 class="w-6 h-6 text-white" />
-                <span class="text-white">Layer 3: Investor Protection</span>
+                <span class="text-white">第三層：投資者保護</span>
               </div>
               <p class="text-white/80 text-sm">
-                98% capital coverage with guaranteed claim settlement
+                98% 資本覆蓋率與保證理賠結算
               </p>
             </div>
           </div>
@@ -125,7 +125,7 @@
         class="text-center"
       >
         <p class="text-white/60 mb-8">
-          Trusted Insurance Partners
+          可信賴的保險夥伴
         </p>
         <div class="flex flex-wrap justify-center items-center gap-12">
           <div
@@ -136,7 +136,7 @@
             :visible-once="{ opacity: 1, scale: 1, transition: { duration: 400, delay: 600 + i * 100 } }"
             class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-6 border border-white/20 hover:bg-white/15 transition-colors"
           >
-            <span class="text-2xl text-white/90">{{ partner.logo }}</span>
+            <span class="text-2xl text-white/90">{{ partner.name }}</span>
           </div>
         </div>
       </div>
@@ -150,25 +150,25 @@ import { Shield, CheckCircle2, Lock, FileCheck } from 'lucide-vue-next'
 const features = [
   {
     icon: Shield,
-    title: 'Multi-Layer Protection',
-    description: 'Insurance coverage backed by leading Taiwan insurers',
+    title: '多層防護',
+    description: '由臺灣領先的保險公司提供保障',
   },
   {
     icon: Lock,
-    title: 'Collateralized Security',
-    description: 'All investments secured with insurance collateral',
+    title: '擔保式安全',
+    description: '所有投資均以保險擔保作為安全機制',
   },
   {
     icon: FileCheck,
-    title: 'Smart Contract Automation',
-    description: 'Automatic claim processing through oracle verification',
+    title: '智慧合約自動化',
+    description: '透過預言機驗證，自動化理賠流程',
   },
 ]
 
 const partners = [
-  { name: 'Fubon Insurance', logo: 'Fubon' },
-  { name: 'Cathay Insurance', logo: 'Cathay' },
-  { name: 'Taiwan Insurance', logo: 'Taiwan' },
+  { name: '國泰', logo: 'Fubon' },
+  { name: '富邦', logo: 'Cathay' },
+  { name: '台產', logo: 'Taiwan' },
 ]
 </script>
 

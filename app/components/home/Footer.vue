@@ -12,24 +12,24 @@
           <!-- Left: CTA -->
           <div>
             <h2 class="text-3xl lg:text-4xl mb-4">
-              Ready to invest in <span class="text-primary">sustainable agriculture</span>?
+              準備好投資<span class="text-primary">永續農業</span>了嗎？
             </h2>
             <p class="text-white/70 text-lg mb-8">
-              Join our investor waitlist and be the first to access premium agricultural RWA opportunities.
+              加入我們的投資者候補名單，優先掌握優質農業 RWA 投資機會。
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
                 class="bg-primary hover:bg-primary/90 text-white rounded-xl"
               >
-                Join Investor Waitlist
+                加入投資人候補名單
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                class="border-2 border-white/30 text-white hover:bg-white hover:text-foreground rounded-xl"
+                class="border-2 border-white/80 bg-transparent text-white hover:bg-white hover:text-foreground rounded-xl"
               >
-                View All Projects
+                查看全部專案
               </Button>
             </div>
           </div>
@@ -39,16 +39,16 @@
             <div class="flex items-center gap-3 mb-4">
               <Mail class="w-6 h-6 text-primary" />
               <h3 class="text-xl">
-                Stay Updated
+                訂閱最新消息
               </h3>
             </div>
             <p class="text-white/70 mb-6">
-              Get the latest insights on sustainable agriculture investments and Web3 RWA opportunities.
+              取得永續農業投資與 Web3 RWA 機會的最新洞察與資訊。
             </p>
             <div class="flex gap-3">
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="輸入您的 Email"
                 class="flex-1 bg-white/10 border border-white/20 text-white placeholder:text-white/50 rounded-xl px-4 py-3 outline-none focus:border-primary transition-colors"
               >
               <Button class="bg-primary hover:bg-primary/90 rounded-xl px-6">
@@ -73,7 +73,7 @@
               <span class="text-xl">GreenFi Labs</span>
             </div>
             <p class="text-white/60 text-sm mb-6">
-              Tokenizing agricultural excellence for a sustainable future.
+              以代幣化推動卓越農業，邁向永續未來。
             </p>
             <div class="flex gap-4">
               <a
@@ -90,7 +90,7 @@
           <!-- Product -->
           <div>
             <h4 class="mb-4">
-              Product
+              產品
             </h4>
             <ul class="space-y-3">
               <li v-for="item in navigation.product" :key="item.name">
@@ -104,7 +104,7 @@
           <!-- Investors -->
           <div>
             <h4 class="mb-4">
-              For Investors
+              投資人專區
             </h4>
             <ul class="space-y-3">
               <li v-for="item in navigation.investors" :key="item.name">
@@ -118,7 +118,7 @@
           <!-- Farmers -->
           <div>
             <h4 class="mb-4">
-              For Farmers
+              農民專區
             </h4>
             <ul class="space-y-3">
               <li v-for="item in navigation.farmers" :key="item.name">
@@ -132,7 +132,7 @@
           <!-- Company -->
           <div>
             <h4 class="mb-4">
-              Company
+              公司
             </h4>
             <ul class="space-y-3">
               <li v-for="item in navigation.company" :key="item.name">
@@ -149,11 +149,11 @@
     <!-- Bottom -->
     <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/60">
-          <p>&copy; 2025 GreenFi Labs. All rights reserved.</p>
+          <p>&copy; 2025 GreenFi Labs. 版權所有。</p>
           <div class="flex gap-6">
-            <a href="#" class="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="#" class="hover:text-primary transition-colors">Terms of Service</a>
-            <a href="#" class="hover:text-primary transition-colors">Legal</a>
+            <a href="#" class="hover:text-primary transition-colors">隱私權政策</a>
+            <a href="#" class="hover:text-primary transition-colors">服務條款</a>
+            <a href="#" class="hover:text-primary transition-colors">法律資訊</a>
         </div>
       </div>
     </div>
@@ -166,28 +166,28 @@ import Button from '~/components/ui/button/Button.vue'
 
 const navigation = {
   product: [
-    { name: 'How It Works', href: '#' },
-    { name: 'Projects', href: '#' },
-    { name: 'Insurance', href: '#' },
-    { name: 'Whitepaper', href: '#' },
+    { name: '運作方式', href: '#' },
+    { name: '專案', href: '#' },
+    { name: '保險', href: '#' },
+    { name: '白皮書', href: '#' },
   ],
   investors: [
-    { name: 'Get Started', href: '#' },
-    { name: 'ROI Calculator', href: '#' },
-    { name: 'Risk Assessment', href: '#' },
-    { name: 'FAQ', href: '#' },
+    { name: '開始使用', href: '#' },
+    { name: '報酬率試算', href: '#' },
+    { name: '風險評估', href: '#' },
+    { name: '常見問題', href: '#' },
   ],
   farmers: [
-    { name: 'Apply Now', href: '#' },
-    { name: 'Benefits', href: '#' },
-    { name: 'Success Stories', href: '#' },
-    { name: 'Support', href: '#' },
+    { name: '立即申請', href: '#' },
+    { name: '好處', href: '#' },
+    { name: '成功案例', href: '#' },
+    { name: '支援', href: '#' },
   ],
   company: [
-    { name: 'About Us', href: '#' },
-    { name: 'Team', href: '#' },
-    { name: 'Partners', href: '#' },
-    { name: 'Contact', href: '#' },
+    { name: '關於我們', href: '#' },
+    { name: '團隊', href: '#' },
+    { name: '合作夥伴', href: '#' },
+    { name: '聯絡我們', href: '#' },
   ],
 }
 

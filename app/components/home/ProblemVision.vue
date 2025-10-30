@@ -9,10 +9,10 @@
         class="text-center mb-16"
       >
         <h2 class="text-4xl lg:text-5xl text-foreground mb-4">
-          The Challenge
+          面臨的挑戰
         </h2>
         <p class="text-xl text-foreground/70 max-w-3xl mx-auto">
-          Taiwan's agriculture faces unprecedented challenges that threaten both farmers and food security
+          臺灣農業正面臨前所未有的挑戰，威脅農民生計與糧食安全
         </p>
       </div>
 
@@ -46,13 +46,13 @@
       >
         <div class="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
           <Shield class="w-5 h-5 text-primary" />
-          <span class="text-primary">SafeHarvest Protocol</span>
+          <span class="text-primary">SafeHarvest 協議</span>
         </div>
         <h2 class="text-4xl lg:text-5xl text-foreground mb-4">
-          From Post-Disaster Relief to <span class="text-primary">Pre-Disaster Investment</span>
+          從災後救濟到<span class="text-primary">災前投資</span>
         </h2>
         <p class="text-xl text-foreground/70 max-w-3xl mx-auto">
-          A paradigm shift in agricultural finance through blockchain-enabled infrastructure funding
+          透過區塊鏈基礎建設資金，實現農業金融的典範轉移
         </p>
       </div>
 
@@ -92,35 +92,35 @@ import { CloudRain, TrendingDown, DollarSign, Shield } from 'lucide-vue-next'
 const challenges = [
   {
     icon: CloudRain,
-    title: 'Climate Risk',
-    description: 'Typhoons and extreme weather damage crops and infrastructure annually',
+    title: '氣候風險',
+    description: '颱風與極端天氣每年損害作物與基礎設施',
   },
   {
     icon: TrendingDown,
-    title: 'Unstable Yields',
-    description: 'Unpredictable harvests lead to income volatility for farmers',
+    title: '產量不穩',
+    description: '難以預測的收成導致農民收入波動',
   },
   {
     icon: DollarSign,
-    title: 'Lack of Funding',
-    description: 'Traditional finance excludes small farmers from infrastructure loans',
+    title: '資金不足',
+    description: '傳統金融體系將小農排除於基礎建設貸款之外',
   },
 ]
 
 const solutions = [
   {
-    title: 'Pre-Disaster Investment',
-    description: 'Build resilience before climate events occur',
+    title: '災前投資',
+    description: '在氣候災害發生前建立韌性',
     color: '#16B36D',
   },
   {
-    title: 'Tokenized Revenue Rights',
-    description: 'Convert future harvest into tradable assets',
+    title: '收益權代幣化',
+    description: '將未來收成轉換為可交易資產',
     color: '#FDBA45',
   },
   {
-    title: 'Insurance-Backed Security',
-    description: 'Protect capital with collateralized coverage',
+    title: '保險背書安全性',
+    description: '以擔保式保險機制保護資本',
     color: '#1E3A5F',
   },
 ]

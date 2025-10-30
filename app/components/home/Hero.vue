@@ -5,7 +5,7 @@
       <div class="absolute inset-0 bg-gradient-to-br from-secondary/90 via-secondary/70 to-primary/60 z-10" />
       <img
         src="https://images.unsplash.com/photo-1568085609104-9aa98df4c87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0YWl3YW4lMjBmYXJtbGFuZCUyMGFlcmlhbHxlbnwxfHx8fDE3NjE2NjM2NzZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-        alt="Taiwan Farmland"
+        alt="臺灣農地"
         class="w-full h-full object-cover"
       >
     </div>
@@ -81,7 +81,7 @@
           :enter="{ opacity: 1, y: 0, transition: { duration: 800, delay: 300 } }"
           class="text-5xl lg:text-7xl text-white max-w-5xl mx-auto leading-tight"
         >
-          Invest in the future of <span class="text-primary">sustainable agriculture</span>
+          投資<span class="text-primary">永續農業</span>的未來
         </h1>
 
         <p
@@ -90,7 +90,7 @@
           :enter="{ opacity: 1, y: 0, transition: { duration: 800, delay: 500 } }"
           class="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed"
         >
-          GreenFi Labs connects global capital with Taiwan's resilient farming through tokenized real-world assets.
+          GreenFi Labs 透過代幣化的實體資產（RWA），連結全球資本與臺灣韌性農業
         </p>
 
         <div
@@ -103,7 +103,7 @@
             size="lg"
             class="bg-primary hover:bg-primary/90 text-white px-8 py-6 rounded-full group shadow-lg shadow-primary/30"
           >
-            Explore Projects
+            探索專案
             <ArrowRight class="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Button>
           <Button
@@ -111,7 +111,7 @@
             variant="outline"
             class="border-2 border-white text-white hover:bg-white hover:text-secondary px-8 py-6 rounded-full backdrop-blur-sm bg-white/10"
           >
-            Learn How It Works
+            了解運作方式
           </Button>
         </div>
 
@@ -145,9 +145,9 @@ import { Leaf, ArrowRight } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 
 const stats = [
-  { value: '$2.4M+', label: 'Total Value Locked' },
-  { value: '120+', label: 'Farming Projects' },
-  { value: '98%', label: 'Insurance Coverage' },
+  { value: '$2.4M+', label: '總鎖倉價值' },
+  { value: '120+', label: '農業專案' },
+  { value: '98%', label: '保險覆蓋率' },
 ]
 </script>
 
