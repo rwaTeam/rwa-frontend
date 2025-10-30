@@ -67,13 +67,13 @@
           <!-- Brand -->
           <div class="col-span-2 md:col-span-4 lg:col-span-1">
             <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <div class="w-10 h-10 bg-gradient-to-br from-primary to-[#A4E2C2] rounded-lg flex items-center justify-center">
                 <Leaf class="w-6 h-6 text-white" />
               </div>
               <span class="text-xl">GreenFi Labs</span>
             </div>
             <p class="text-white/60 text-sm mb-6">
-              以代幣化推動卓越農業，邁向永續未來。
+              科技賦能農業，共創永續未來
             </p>
             <div class="flex gap-4">
               <a
