@@ -18,90 +18,71 @@ import type { Project } from '~/types/project'
 import FeaturedProject from '~/components/project/FeaturedProject.vue'
 import ProjectCard from '~/components/project/ProjectCard.vue'
 
-// Mock project data
-const projects: Project[] = [
-  {
-    id: '1',
-    name: '台南頂級芒果莊園',
-    location: '台灣台南',
-    cropType: '愛文芒果',
-    image: 'https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5nbyUyMGZhcm0lMjBhZXJpYWx8ZW58MXx8fHwxNzYxNzYwMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    expectedROI: 18.5,
-    tokenizedShare: '5年內收益的25%',
-    status: '開放中',
-    contractAddress: '0x742d35...3a9b1f',
-    insuranceCoverage: true,
-    insuranceProvider: '富邦承保',
+// API Response Type
+interface ApiProject {
+  _id: string
+  title: string
+  imageURL: string
+  region: string
+  annual_yield_rate: string
+  contract_address: string
+  description: string
+  total_nft: number
+  nft_price: number
+  insurance_company: string
+  status: string
+  crop_name: string
+}
+
+// Transform API data to Project type
+const transformApiProject = (apiProject: ApiProject): Project => {
+  return {
+    id: apiProject._id,
+    name: apiProject.title,
+    location: apiProject.region,
+    cropType: apiProject.crop_name,
+    image: apiProject.imageURL,
+    expectedROI: parseFloat(apiProject.annual_yield_rate.replace('%', '')),
+    tokenizedShare: '收益權代幣化',
+    status: apiProject.status as Project['status'],
+    contractAddress: apiProject.contract_address || '待分配',
+    insuranceCoverage: !!apiProject.insurance_company,
+    insuranceProvider: apiProject.insurance_company || undefined,
+  }
+}
+
+// Fetch projects from API - using proxy to avoid CORS issues
+const { data: apiData, pending, error, refresh } = useLazyFetch<ApiProject[]>('/api/getProjects', {
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
   },
-  {
-    id: '2',
-    name: '高雄有機木瓜農場',
-    location: '台灣高雄',
-    cropType: '木瓜',
-    image: 'https://images.unsplash.com/photo-1707282399877-8d57c412c5c4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYXBheWElMjBwbGFudGF0aW9ufGVufDF8fHx8MTc2MTc2MDAzM3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    expectedROI: 15.2,
-    tokenizedShare: '4年內收益的20%',
-    status: '開放中',
-    contractAddress: '0x8f3c47...2d5e9a',
-    insuranceCoverage: true,
-    insuranceProvider: '富邦承保',
+  onResponseError({ response }) {
+    console.error('API Response Error:', response.status, response.statusText)
   },
-  {
-    id: '3',
-    name: '屏東火龍果谷',
-    location: '台灣屏東',
-    cropType: '火龍果',
-    image: 'https://images.unsplash.com/photo-1594490986417-2b50613cd63a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBmcnVpdCUyMGZhcm18ZW58MXx8fHwxNzYxNzYwMDMzfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    expectedROI: 16.8,
-    tokenizedShare: '3年內收益的30%',
-    status: '已募資',
-    contractAddress: '0xa2b9c1...7f4e3d',
-    insuranceCoverage: true,
-    insuranceProvider: '國泰承保',
+  onRequestError({ error: err }) {
+    console.error('API Request Error:', err.message)
   },
-  {
-    id: '4',
-    name: '台中永續農業合作社',
-    location: '台灣台中',
-    cropType: '鳳梨',
-    image: 'https://images.unsplash.com/photo-1749483432710-707b46a32b25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0YWl3YW4lMjBhZ3JpY3VsdHVyZSUyMGZpZWxkfGVufDF8fHx8MTc2MTc2MDAzM3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    expectedROI: 14.5,
-    tokenizedShare: '6年內收益的15%',
-    status: '即將推出',
-    contractAddress: '0x5d7a8f...1c9e2b',
-    insuranceCoverage: false,
-  },
-  {
-    id: '5',
-    name: '雲林有機蔬菜農場',
-    location: '台灣雲林',
-    cropType: '綜合蔬菜',
-    image: 'https://images.unsplash.com/photo-1714588419509-3a9b5b1b959e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvcmdhbmljJTIwZmFybSUyMGFlcmlhbCUyMHZpZXd8ZW58MXx8fHwxNzYxNzYwMDM0fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    expectedROI: 12.3,
-    tokenizedShare: '4年內收益的18%',
-    status: '開放中',
-    contractAddress: '0x9c4b2d...6a8f5e',
-    insuranceCoverage: true,
-    insuranceProvider: '富邦承保',
-  },
-  {
-    id: '6',
-    name: '南投高山茶園',
-    location: '台灣南投',
-    cropType: '綠茶',
-    image: 'https://images.unsplash.com/photo-1621445162463-61ff2c677736?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmVlbiUyMHRlYSUyMHBsYW50YXRpb258ZW58MXx8fHwxNzYxNzYwMDM0fDA&ixlib=rb-4.1.0&q=80&w=1080',
-    expectedROI: 19.7,
-    tokenizedShare: '5年內收益的22%',
-    status: '開放中',
-    contractAddress: '0x3e6d9a...4f7c1b',
-    insuranceCoverage: true,
-    insuranceProvider: '國泰承保',
-  },
-]
+})
+
+// Function to retry loading
+const retryLoad = () => {
+  refresh()
+}
+
+// Transform data
+const projects = computed(() => {
+  if (!apiData.value || apiData.value.length === 0) return []
+  return apiData.value.map(transformApiProject)
+})
 
 const currentPage = ref(1)
-const featuredProject = projects[0]
-const regularProjects = projects.slice(1)
+const featuredProject = computed(() => {
+  return projects.value.length > 0 ? projects.value[0] : null
+})
+const regularProjects = computed(() => {
+  return projects.value.length > 1 ? projects.value.slice(1) : []
+})
 </script>
 
 <template>
@@ -227,14 +208,39 @@ const regularProjects = projects.slice(1)
 
     <!-- Main Content -->
     <main class="max-w-[1440px] mx-auto px-6 py-10">
-      <div class="flex gap-8">
+      <!-- Loading State -->
+      <div v-if="pending" class="flex justify-center items-center py-20">
+        <div class="text-center">
+          <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p class="text-gray-600">載入專案中...</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="flex justify-center items-center py-20">
+        <div class="text-center max-w-md">
+          <div class="mb-4">
+            <svg class="w-16 h-16 mx-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">載入專案時發生錯誤</h3>
+          <p class="text-gray-600 mb-4">{{ error.message || '無法連接到伺服器，請檢查網路連線' }}</p>
+          <Button @click="retryLoad" class="bg-primary hover:bg-accent text-white">
+            重新載入
+          </Button>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div v-else class="flex gap-8">
         <!-- Projects Section -->
         <div class="flex-1">
           <!-- Featured Project -->
-          <FeaturedProject :project="featuredProject" />
+          <FeaturedProject v-if="featuredProject" :project="featuredProject" />
 
           <!-- Project Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+          <div v-if="regularProjects.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
             <ProjectCard
               v-for="project in regularProjects"
               :key="project.id"
@@ -242,10 +248,16 @@ const regularProjects = projects.slice(1)
             />
           </div>
 
+          <!-- No Projects -->
+          <div v-else-if="!featuredProject" class="text-center py-20">
+            <p class="text-gray-600">目前沒有可用的專案</p>
+          </div>
+
           <!-- Pagination -->
           <Pagination
+            v-if="projects.length > 0"
             v-slot="{ page }"
-            :total="100"
+            :total="projects.length"
             :items-per-page="10"
             :sibling-count="1"
             show-edges

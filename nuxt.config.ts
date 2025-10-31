@@ -11,6 +11,19 @@ export default defineNuxtConfig({
       ]
     }
   },
+  nitro: {
+    devProxy: {
+      '/api': {
+        target: 'https://rwa-backend.vercel.app/api',
+        changeOrigin: true,
+      }
+    }
+  },
+  routeRules: {
+    '/api/**': {
+      proxy: 'https://rwa-backend.vercel.app/api/**'
+    }
+  },
   vite: {
     optimizeDeps: {
       include: ['ethers']
