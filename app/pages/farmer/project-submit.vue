@@ -86,6 +86,18 @@
                 />
               </div>
 
+              <!-- Farmer Wallet Address -->
+              <div>
+                <label class="block text-sm font-medium text-[#272D27] mb-2">
+                  農夫錢包地址 <span class="text-red-500">*</span>
+                </label>
+                <Input
+                  v-model="formData.farmerId"
+                  placeholder="例：0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                  class="w-full"
+                />
+              </div>
+
               <!-- Area -->
               <div>
                 <label class="block text-sm font-medium text-[#272D27] mb-2">
@@ -289,10 +301,11 @@
             <Button
               size="lg"
               class="flex-1 bg-[#16B36D] hover:bg-[#16B36D]/90 text-white"
+              :disabled="isSubmitting"
               @click="handleSubmit"
             >
               <Send class="w-5 h-5 mr-2" />
-              提交審核
+              {{ isSubmitting ? '提交中...' : '提交審核' }}
             </Button>
           </div>
         </div>
@@ -409,10 +422,11 @@
               <Button
                 size="lg"
                 class="w-full bg-[#16B36D] hover:bg-[#16B36D]/90 text-white"
+                :disabled="isSubmitting"
                 @click="handleSubmit"
               >
                 <Send class="w-5 h-5 mr-2" />
-                提交審核
+                {{ isSubmitting ? '提交中...' : '提交審核' }}
               </Button>
               <div class="grid grid-cols-2 gap-4">
                 <Button
@@ -548,6 +562,13 @@
               </div>
 
               <div>
+                <div class="text-sm text-[#272D27]/60 mb-1">農夫錢包地址</div>
+                <div class="font-medium text-[#262624] break-all">
+                  {{ formData.farmerId || '未填寫' }}
+                </div>
+              </div>
+
+              <div>
                 <div class="text-sm text-[#272D27]/60 mb-1">種植面積</div>
                 <div class="font-medium text-[#262624]">
                   {{ formData.area || '0' }} 公頃
@@ -651,6 +672,7 @@ const formData = reactive({
   expectedYield: '',
   unitPrice: '',
   sustainability: '',
+  farmerId: '',
 })
 
 // Image Upload
@@ -808,14 +830,65 @@ const calculatedResults = computed(() => {
 const showSuccessModal = ref(false)
 const showPreviewModal = ref(false)
 
-// Actions
-const handleSubmit = () => {
-  // TODO: 實際提交到後端 API
-  console.log('提交表單數據:', formData)
-  console.log('上傳的圖片:', imageFile.value)
-  console.log('計算器參數:', calculatorParams)
+// Loading state
+const isSubmitting = ref(false)
 
-  showSuccessModal.value = true
+// Reset Form Function
+const resetForm = () => {
+  formData.projectName = ''
+  formData.cropType = ''
+  formData.location = ''
+  formData.area = ''
+  formData.description = ''
+  formData.startDate = ''
+  formData.endDate = ''
+  formData.expectedYield = ''
+  formData.unitPrice = ''
+  formData.sustainability = ''
+  formData.farmerId = ''
+  removeImage()
+}
+
+// Actions
+const handleSubmit = async () => {
+  isSubmitting.value = true
+  
+  try {
+    const payload = {
+      projectName: formData.projectName,
+      cropType: formData.cropType,
+      location: formData.location,
+      area: Number(formData.area),
+      description: formData.description,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      expectedYield: Number(formData.expectedYield),
+      unitPrice: Number(formData.unitPrice),
+      hasInsurance: true,
+      insuranceCompany: '富邦產險',
+      sustainability: formData.sustainability,
+      coverImage: imagePreview.value || '',
+      initCost: Number(calculatorParams.initCost),
+      annualIncome: Number(calculatorParams.annualIncome),
+      investorPercent: Number(calculatorParams.investorPercent),
+      interest: Number(calculatorParams.interest),
+      premium: Number(calculatorParams.premium),
+      farmer_id: formData.farmerId
+    }
+
+    await $fetch('https://rwa-backend.vercel.app/api/projects/submit', {
+      method: 'POST',
+      body: payload
+    })
+
+    // 提交成功
+    showSuccessModal.value = true
+    resetForm()
+  } catch (error) {
+    // 提交失敗處理
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 const handlePreview = () => {
@@ -829,18 +902,7 @@ const handleSubmitFromPreview = () => {
 
 const handleCancel = () => {
   if (confirm('確定要取消嗎？所有未儲存的資料將會遺失。')) {
-    // 重置表單
-    formData.projectName = ''
-    formData.cropType = ''
-    formData.location = ''
-    formData.area = ''
-    formData.description = ''
-    formData.startDate = ''
-    formData.endDate = ''
-    formData.expectedYield = ''
-    formData.unitPrice = ''
-    formData.sustainability = ''
-    removeImage()
+    resetForm()
   }
 }
 </script>
