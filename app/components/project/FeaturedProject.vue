@@ -103,7 +103,7 @@ const props = defineProps<FeaturedProjectProps>()
           <Button class="flex-1 bg-primary hover:bg-accent text-white">
             立即投資
           </Button>
-          <Button variant="outline" class="flex-1 border-secondary text-secondary hover:bg-secondary/5">
+          <Button variant="outline" class="flex-1 border-secondary text-secondary hover:bg-secondary/5" @click="navigateTo(`/project/${project.id}`)">
             查看詳情
           </Button>
         </div>

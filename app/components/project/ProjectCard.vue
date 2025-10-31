@@ -96,7 +96,9 @@ const statusColors = {
       </div>
 
       <!-- CTA Button -->
-      <Button class="w-full bg-primary hover:bg-accent text-white transition-colors">
+      <Button class="w-full bg-primary hover:bg-accent text-white transition-colors"
+        @click="navigateTo(`/project/${project.id}`)"
+      >
         查看詳情
       </Button>
     </div>
