@@ -14,7 +14,7 @@ export default defineNuxtConfig({
   nitro: {
     devProxy: {
       '/api': {
-        target: 'https://rwa-backend.vercel.app/api',
+        target: 'https://rwa-backend.vercel.app',
         changeOrigin: true,
       }
     }
