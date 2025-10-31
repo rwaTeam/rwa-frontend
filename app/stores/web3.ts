@@ -400,6 +400,59 @@ export const useWeb3Store = defineStore('web3', {
       }
     },
 
+    // 提領收益
+    async withdraw(contractAddress: string, amount: string) {
+      if (!this.isConnected || !this.signer || !this.isCorrectNetwork) {
+        throw new Error('請先連接錢包並切換到 Sepolia 網路')
+      }
+
+      if (!contractAddress || !amount || parseFloat(amount) <= 0) {
+        throw new Error('請提供有效的合約地址和提領金額')
+      }
+
+      try {
+        const { parseEther, Contract } = await import('ethers')
+        const ABI = await import('~/config/ABI.json')
+        
+        const amountInWei = parseEther(amount)
+        
+        // 創建合約實例
+        // ABI.json 是數組格式，直接使用
+        const contract = new Contract(contractAddress, ABI.default || ABI, this.signer)
+        
+        // 調用 withdrawDeposit 方法
+        // 根據 ABI，withdrawDeposit 需要 _withdrawAddress 和 _withdrawAmount
+        const tx = await contract.withdrawDeposit(
+          this.account, // 提領地址
+          amountInWei   // 提領金額
+        )
+
+        console.log('提領交易已發送:', tx.hash)
+
+        // 等待交易確認
+        const receipt = await tx.wait()
+        
+        console.log('提領交易已確認:', receipt)
+
+        // 更新餘額
+        await this.updateBalance()
+
+        return {
+          txHash: tx.hash,
+          receipt,
+        }
+      } catch (error: any) {
+        console.error('提領失敗:', error)
+        
+        // 處理用戶拒絕交易
+        if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
+          throw new Error('交易已被拒絕')
+        }
+        
+        throw new Error(error.message || '提領失敗')
+      }
+    },
+
     // 設置事件監聽器
     setupEventListeners() {
       if (!window.ethereum) return
