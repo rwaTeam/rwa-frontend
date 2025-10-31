@@ -251,32 +251,6 @@
             </h2>
 
             <div class="space-y-6">
-              <!-- Insurance -->
-              <div>
-                <label class="block text-sm font-medium text-[#272D27] mb-3">
-                  是否投保災害險？
-                </label>
-                <div class="flex gap-4">
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input
-                      v-model="formData.hasInsurance"
-                      type="radio"
-                      :value="true"
-                      class="w-4 h-4 text-[#16B36D] border-gray-300 focus:ring-[#16B36D]"
-                    >
-                    <span class="text-sm text-[#272D27]">是</span>
-                  </label>
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input
-                      v-model="formData.hasInsurance"
-                      type="radio"
-                      :value="false"
-                      class="w-4 h-4 text-[#16B36D] border-gray-300 focus:ring-[#16B36D]"
-                    >
-                    <span class="text-sm text-[#272D27]">否</span>
-                  </label>
-                </div>
-              </div>
 
               <!-- Sustainability -->
               <div>
@@ -392,36 +366,36 @@
                       預估收益摘要
                     </h3>
                     <div class="space-y-3">
+                      <div class="bg-gradient-to-br from-[#3BB273]/10 to-[#16B36D]/10 rounded-xl p-4 border border-[#3BB273]/20">
+                        <div class="text-xs text-[#272D27]/70 mb-1">
+                          每年分潤金額
+                        </div>
+                        <div class="text-2xl font-bold text-[#3BB273]">
+                          {{ calculatedResults.annualPayment }} 萬
+                        </div>
+                      </div>
                       <div class="bg-gradient-to-br from-[#16B36D]/10 to-[#A4E2C2]/10 rounded-xl p-4 border border-[#16B36D]/20">
                         <div class="text-xs text-[#272D27]/70 mb-1">
-                          第 1 年投資報酬率
+                          第 1 年買回價格
                         </div>
                         <div class="text-2xl font-bold text-[#16B36D]">
-                          {{ calculatedResults.year1Return }}
+                          {{ calculatedResults.year1Buyback }} 萬
                         </div>
                       </div>
                       <div class="bg-gradient-to-br from-[#FDBA45]/10 to-[#FD773D]/10 rounded-xl p-4 border border-[#FDBA45]/20">
                         <div class="text-xs text-[#272D27]/70 mb-1">
-                          第 5 年投資報酬率
+                          第 5 年買回價格
                         </div>
                         <div class="text-2xl font-bold text-[#FD773D]">
-                          {{ calculatedResults.year5Return }}
+                          {{ calculatedResults.year5Buyback }} 萬
                         </div>
                       </div>
                       <div class="bg-gradient-to-br from-[#16B36D]/10 to-[#1E3A5F]/10 rounded-xl p-4 border border-[#1E3A5F]/20">
                         <div class="text-xs text-[#272D27]/70 mb-1">
-                          第 10 年投資報酬率
+                          第 10 年買回價格
                         </div>
                         <div class="text-2xl font-bold text-[#1E3A5F]">
-                          {{ calculatedResults.year10Return }}
-                        </div>
-                      </div>
-                      <div class="bg-gradient-to-br from-[#A4E2C2]/20 to-[#16B36D]/20 rounded-xl p-4 border border-[#16B36D]/30">
-                        <div class="text-xs text-[#272D27]/70 mb-1">
-                          殖利率（不買回）
-                        </div>
-                        <div class="text-2xl font-bold text-[#16B36D]">
-                          {{ calculatedResults.yieldRate }}
+                          {{ calculatedResults.year10Buyback }} 萬
                         </div>
                       </div>
                     </div>
@@ -617,13 +591,6 @@
                 </div>
               </div>
 
-              <div>
-                <div class="text-sm text-[#272D27]/60 mb-1">是否投保災害險</div>
-                <div class="font-medium text-[#262624]">
-                  {{ formData.hasInsurance ? '是' : '否' }}
-                </div>
-              </div>
-
               <div v-if="formData.sustainability">
                 <div class="text-sm text-[#272D27]/60 mb-1">永續性說明</div>
                 <div class="text-[#262624] whitespace-pre-wrap">
@@ -683,7 +650,6 @@ const formData = reactive({
   endDate: '',
   expectedYield: '',
   unitPrice: '',
-  hasInsurance: false,
   sustainability: '',
 })
 
@@ -831,10 +797,10 @@ const calculatedResults = computed(() => {
   const data = calculateData(params)
 
   return {
-    year1Return: data[1]?.totalReturnWithBuyback || '0%',
-    year5Return: data[5]?.totalReturnWithBuyback || '0%',
-    year10Return: data[10]?.totalReturnWithBuyback || '0%',
-    yieldRate: data[1]?.yieldNoBuyback || '0%',
+    annualPayment: data[1]?.investorIncome || 0,
+    year1Buyback: data[1]?.buybackPrice || 0,
+    year5Buyback: data[5]?.buybackPrice || 0,
+    year10Buyback: data[10]?.buybackPrice || 0,
   }
 })
 
@@ -873,7 +839,6 @@ const handleCancel = () => {
     formData.endDate = ''
     formData.expectedYield = ''
     formData.unitPrice = ''
-    formData.hasInsurance = false
     formData.sustainability = ''
     removeImage()
   }
