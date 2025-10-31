@@ -11,10 +11,13 @@ import TransparencySection from '~/components/project/detail/TransparencySection
 import InvestmentStatus from '~/components/project/detail/InvestmentStatus.vue'
 import InvestmentCard from '~/components/project/detail/InvestmentCard.vue'
 import RelatedProjects from '~/components/project/detail/RelatedProjects.vue'
+import { useProjectsStore } from '~/stores/projects'
+import { useContractData } from '~/composables/useContractData'
+import type { ApiProject, ContractData } from '~/types/project'
 
 // 取得路由參數
 const route = useRoute()
-const projectId = route.params.id
+const projectId = route.params.id as string
 
 // 頁面 meta 設定
 useHead({
@@ -24,99 +27,311 @@ useHead({
   ]
 })
 
-// Mock 專案資料（之後可替換為 API 呼叫）
-const projectData = ref({
-  name: "台南玉井愛文芒果種植計劃 2025",
-  cropType: "愛文芒果（Irwin Mango）",
-  location: "台南市玉井區",
-  startDate: "2025年3月",
-  endDate: "2025年7月",
-  expectedROI: 18.5,
+// 取得 stores 和 composables
+const projectsStore = useProjectsStore()
+const { fetchContractData } = useContractData()
+
+// 載入狀態
+const loading = ref(true)
+const contractLoading = ref(false)
+const error = ref<string | null>(null)
+
+// 專案資料
+const apiProject = ref<ApiProject | null>(null)
+const contractData = ref<ContractData | null>(null)
+
+// 輔助函數：將任意專案資料轉換為 ApiProject 格式
+const normalizeProject = (project: any): ApiProject => {
+  // 如果已經是 ApiProject 格式，直接返回
+  if (project._id && project.title) {
+    return project as ApiProject
+  }
+  
+  // 如果是 Project 格式，轉換為 ApiProject
+  return {
+    _id: project.id || project._id || '',
+    title: project.name || project.title || '',
+    imageURL: project.image || project.imageURL || '',
+    region: project.location || project.region || '',
+    annual_yield_rate: `${project.expectedROI || 0}%`,
+    contract_address: project.contractAddress || project.contract_address || '',
+    description: project.description || '',
+    total_nft: project.total_nft || 1000,
+    nft_price: project.nft_price || 0.001,
+    insurance_company: project.insuranceProvider || project.insurance_company || '',
+    status: project.status || '開放中',
+    crop_name: project.cropType || project.crop_name || '',
+  } as ApiProject
+}
+
+// 從 store 或 API 取得專案資料
+const loadProjectData = async () => {
+  try {
+    loading.value = true
+    error.value = null
+
+    // 如果 store 是空的，先載入所有專案
+    if (projectsStore.getAllProjects.length === 0) {
+      try {
+        await projectsStore.fetchProjects()
+      } catch (fetchError) {
+        console.warn('無法載入專案列表:', fetchError)
+      }
+    }
+    
+    // 先從 store 查找
+    let project = projectsStore.getProjectById(projectId)
+    
+    // 如果 store 沒有，嘗試從 API 取得
+    if (!project) {
+      try {
+        const { data } = await useFetch<ApiProject>(`/api/getProject/${projectId}`, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (data.value) {
+          project = data.value
+          projectsStore.addProject(project)
+        }
+      } catch (apiError) {
+        console.warn('無法從 API 取得專案，嘗試使用 store 中的第一個專案')
+        // 如果 API 失敗，使用 store 中的第一個專案作為 fallback
+        const allProjects = projectsStore.getAllProjects
+        if (allProjects.length > 0) {
+          project = allProjects[0]
+        }
+      }
+    }
+
+    if (!project) {
+      throw new Error('找不到專案資料')
+    }
+
+    // 標準化專案資料，確保格式正確
+    apiProject.value = normalizeProject(project)
+
+    // 讀取合約資料（使用標準化後的資料）
+    const contractAddress = apiProject.value.contract_address
+    if (contractAddress && contractAddress !== '待分配') {
+      contractLoading.value = true
+      try {
+        const contract = await fetchContractData(contractAddress)
+        contractData.value = contract
+      } catch (contractError) {
+        console.error('讀取合約資料失敗:', contractError)
+        // 合約讀取失敗不影響頁面顯示，繼續使用假資料
+      } finally {
+        contractLoading.value = false
+      }
+    }
+  } catch (err: any) {
+    error.value = err.message || '載入專案資料失敗'
+    console.error('載入專案資料失敗:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 初始化載入資料
+onMounted(() => {
+  loadProjectData()
+})
+
+// 資料轉換函數：將 API 資料和合約資料轉換為頁面所需格式
+const transformToDetailData = (apiProject: ApiProject, contractData?: ContractData | null) => {
+  const expectedROI = parseFloat(apiProject.annual_yield_rate.replace('%', '')) || 18.5
+  const contractBalance = contractData?.balance ? parseFloat(contractData.balance) : 0
+  const balanceInUSD = contractBalance * 3000 // 假設 1 ETH = 3000 USD
+
+  // 計算日期（使用假資料邏輯）
+  const currentDate = new Date()
+  const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+  const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 4, 15)
+
+  const formatDate = (date: Date) => {
+    return `${date.getFullYear()}年${date.getMonth() + 1}月`
+  }
+
+  const formatFullDate = (date: Date) => {
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+  }
+
+  return {
+    _projectData: {
+      name: apiProject.title || "專案名稱",
+      cropType: apiProject.crop_name || "作物類型",
+      location: apiProject.region || "地點",
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      expectedROI,
+      status: (apiProject.status === '開放中' || apiProject.status === '已募資' || apiProject.status === '即將推出') 
+        ? apiProject.status as '開放中' | '已募資' | '即將推出'
+        : '開放中' as const,
+      coverImage: apiProject.imageURL || "https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5nbyUyMGZhcm0lMjBhZXJpYWx8ZW58MXx8fHwxNzYxNzYwMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      minInvestment: 0.001,
+    },
+    _farmerData: {
+      name: "陳建宏",
+      region: apiProject.region || "台南玉井",
+      experience: "25年種植經驗",
+      projectsCompleted: 12,
+      reputation: 95,
+      image: "https://images.unsplash.com/photo-1599109190522-dc04cb741875?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMGZhcm1lciUyMHBvcnRyYWl0fGVufDF8fHx8MTc2MTgyMTY1M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+    },
+    _projectAbout: {
+      description: apiProject.description || "這是一個優質的農業投資專案，採用友善環境種植法，確保產品品質與永續發展。",
+      farmStory: "農場主人多年來堅持以自然農法呵護每一棵作物，相信「土地會記得你的用心」。透過 GreenFi Labs 平台，希望讓更多人參與永續農業，共享豐收的喜悅。",
+      scale: "3.5 公頃（約 10,500 坪）",
+      method: "友善環境種植、有機肥培、滴灌系統",
+      targetMarket: "日本、香港高端市場及台灣精品通路",
+      farmImage: apiProject.imageURL || "https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5nbyUyMGZhcm0lMjBhZXJpYWx8ZW58MXx8fHwxNzYxNzYwMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+    },
+    _investmentData: {
+      investorShare: 65,
+      farmerShare: 30,
+      insuranceShare: 5,
+      expectedTotalReturn: contractBalance > 0 ? Math.round(balanceInUSD * (1 + expectedROI / 100)) : 11850,
+      insuranceCoverage: 80,
+      annualizedROI: expectedROI,
+    },
+    _insuranceData: {
+      providers: apiProject.insurance_company 
+        ? [
+            { name: apiProject.insurance_company, coverage: "自然災害保障", logo: "🛡️" },
+            { name: "國泰產險", coverage: "作物損失保障", logo: "🌿" },
+          ]
+        : [
+            { name: "富邦產險", coverage: "自然災害保障", logo: "🛡️" },
+            { name: "國泰產險", coverage: "作物損失保障", logo: "🌿" },
+          ],
+      coverageDetails: [
+        "颱風、豪雨造成的作物損害 - 最高賠償 80%",
+        "乾旱、異常高溫損失 - 最高賠償 70%",
+        "病蟲害防治失效損失 - 最高賠償 60%",
+        "市場價格波動保護機制 - 保底收購價格",
+      ],
+      protocol: "SafeHarvest Protocol 是 GreenFi Labs 開發的智能合約保險系統，當符合理賠條件時（如氣象局發布颱風警報、實地損失評估達標），系統將自動觸發理賠流程，無需繁瑣申請手續。所有理賠紀錄均上鏈記錄，確保公開透明。",
+    },
+    _transparencyData: {
+      contractAddress: apiProject.contract_address || "0x742d35Cc6634C0532925a3b844Bc9e7595f0Ab2E",
+      transactions: contractData && contractData.transactionCount > 0
+        ? [
+            {
+              type: "投資資金注入",
+              amount: `$${Math.round(balanceInUSD).toLocaleString()}`,
+              date: formatFullDate(new Date()),
+              status: "completed" as const,
+            },
+            ...(contractData.transactionCount > 1 ? [
+              {
+                type: "農資採購支付",
+                amount: `$${Math.round(balanceInUSD * 0.3).toLocaleString()}`,
+                date: formatFullDate(new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)),
+                status: "completed" as const,
+              },
+            ] : []),
+          ]
+        : [
+            {
+              type: "投資資金注入",
+              amount: "$125,000",
+              date: "2025-03-15",
+              status: "completed" as const,
+            },
+            {
+              type: "農資採購支付",
+              amount: "$35,000",
+              date: "2025-03-20",
+              status: "completed" as const,
+            },
+            {
+              type: "保險金繳納",
+              amount: "$6,250",
+              date: "2025-03-20",
+              status: "completed" as const,
+            },
+            {
+              type: "灌溉設備支付",
+              amount: "$12,500",
+              date: "2025-04-01",
+              status: "pending" as const,
+            },
+          ],
+    },
+  }
+}
+
+// 使用 computed 生成頁面所需的資料
+const detailData = computed(() => {
+  if (!apiProject.value) {
+    return null
+  }
+  return transformToDetailData(apiProject.value, contractData.value)
+})
+
+// 展開資料以便在模板中使用
+const projectData = computed(() => detailData.value?._projectData || {
+  name: "載入中...",
+  cropType: "",
+  location: "",
+  startDate: "",
+  endDate: "",
+  expectedROI: 0,
   status: "開放中" as const,
-  coverImage: "https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5nbyUyMGZhcm0lMjBhZXJpYWx8ZW58MXx8fHwxNzYxNzYwMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+  coverImage: "",
   minInvestment: 0.001,
 })
 
-const farmerData = ref({
-  name: "陳建宏",
-  region: "台南玉井",
-  experience: "25年種植經驗",
-  projectsCompleted: 12,
-  reputation: 95,
-  image: "https://images.unsplash.com/photo-1599109190522-dc04cb741875?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhc2lhbiUyMGZhcm1lciUyMHBvcnRyYWl0fGVufDF8fHx8MTc2MTgyMTY1M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+const farmerData = computed(() => detailData.value?._farmerData || {
+  name: "",
+  region: "",
+  experience: "",
+  projectsCompleted: 0,
+  reputation: 0,
+  image: "",
 })
 
-const projectAbout = ref({
-  description: "台南玉井素有「芒果之鄉」美稱，本計劃位於玉井核心產區，由第三代果農陳建宏先生主持。農場採用友善環境種植法，結合現代化灌溉系統與傳統套袋技術，確保每顆芒果都達到外銷等級。本季預計產量 12,000 公斤，主要供應日本與香港高端市場。",
-  farmStory: "陳建宏先生自幼跟隨父親學習芒果種植，25 年來堅持以自然農法呵護每一棵果樹。他相信「土地會記得你的用心」，因此從不使用化學農藥，而是透過生態平衡維持果園健康。透過 GreenFi Labs 平台，陳先生希望讓更多人參與永續農業，共享豐收的喜悅。",
-  scale: "3.5 公頃（約 10,500 坪）",
-  method: "友善環境種植、有機肥培、滴灌系統",
-  targetMarket: "日本、香港高端市場及台灣精品通路",
-  farmImage: "https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5nbyUyMGZhcm0lMjBhZXJpYWx8ZW58MXx8fHwxNzYxNzYwMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+const projectAbout = computed(() => detailData.value?._projectAbout || {
+  description: "",
+  farmStory: "",
+  scale: "",
+  method: "",
+  targetMarket: "",
+  farmImage: "",
 })
 
-const investmentData = ref({
-  investorShare: 65,
-  farmerShare: 30,
-  insuranceShare: 5,
-  expectedTotalReturn: 11850,
-  insuranceCoverage: 80,
-  annualizedROI: 18.5,
+const investmentData = computed(() => detailData.value?._investmentData || {
+  investorShare: 0,
+  farmerShare: 0,
+  insuranceShare: 0,
+  expectedTotalReturn: 0,
+  insuranceCoverage: 0,
+  annualizedROI: 0,
 })
 
-const insuranceData = ref({
-  providers: [
-    { name: "富邦產險", coverage: "自然災害保障", logo: "🛡️" },
-    { name: "國泰產險", coverage: "作物損失保障", logo: "🌿" },
-  ],
-  coverageDetails: [
-    "颱風、豪雨造成的作物損害 - 最高賠償 80%",
-    "乾旱、異常高溫損失 - 最高賠償 70%",
-    "病蟲害防治失效損失 - 最高賠償 60%",
-    "市場價格波動保護機制 - 保底收購價格",
-  ],
-  protocol: "SafeHarvest Protocol 是 GreenFi Labs 開發的智能合約保險系統，當符合理賠條件時（如氣象局發布颱風警報、實地損失評估達標），系統將自動觸發理賠流程，無需繁瑣申請手續。所有理賠紀錄均上鏈記錄，確保公開透明。",
+const insuranceData = computed(() => detailData.value?._insuranceData || {
+  providers: [],
+  coverageDetails: [],
+  protocol: "",
 })
 
-const transparencyData = ref({
-  contractAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0Ab2E",
-  transactions: [
-    {
-      type: "投資資金注入",
-      amount: "$125,000",
-      date: "2025-03-15",
-      status: "completed" as const,
-    },
-    {
-      type: "農資採購支付",
-      amount: "$35,000",
-      date: "2025-03-20",
-      status: "completed" as const,
-    },
-    {
-      type: "保險金繳納",
-      amount: "$6,250",
-      date: "2025-03-20",
-      status: "completed" as const,
-    },
-    {
-      type: "灌溉設備支付",
-      amount: "$12,500",
-      date: "2025-04-01",
-      status: "pending" as const,
-    },
-  ],
+const transparencyData = computed(() => detailData.value?._transparencyData || {
+  contractAddress: "",
+  transactions: [],
 })
 
 const hasInvested = ref(false)
-const investmentStatus = ref({
+const investmentStatus = computed(() => ({
   hasInvested: false,
   investmentAmount: 5000,
-  estimatedROI: 18.5,
+  estimatedROI: projectData.value.expectedROI,
   projectProgress: 35,
-  expectedReturnDate: "2025年7月15日",
+  expectedReturnDate: projectData.value.endDate || "2025年7月15日",
   claimableRewards: 0,
-})
+}))
 
 const relatedProjects = ref([
   {
