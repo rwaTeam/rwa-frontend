@@ -11,6 +11,16 @@ export default defineNuxtConfig({
       ]
     }
   },
+  vite: {
+    optimizeDeps: {
+      include: ['ethers']
+    },
+    build: {
+      commonjsOptions: {
+        transformMixedEsModules: true
+      }
+    }
+  },
   modules: [
     '@nuxtjs/tailwindcss',
     'shadcn-nuxt',
