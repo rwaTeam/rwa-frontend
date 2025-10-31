@@ -28,6 +28,7 @@
                 size="lg"
                 variant="outline"
                 class="border-2 border-white/80 bg-transparent text-white hover:bg-white hover:text-foreground rounded-xl"
+                @click="navigateTo('/project/list')"
               >
                 查看全部專案
               </Button>

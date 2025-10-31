@@ -127,6 +127,7 @@
             variant="outline"
             size="lg"
             class="border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-xl px-8"
+            @click="navigateTo('/project/list')"
           >
           查看全部專案
         </Button>

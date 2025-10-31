@@ -102,6 +102,7 @@
           <Button
             size="lg"
             class="bg-primary hover:bg-primary/90 text-white px-8 py-6 rounded-full group shadow-lg shadow-primary/30"
+            @click="navigateTo('/project/list')"
           >
             探索專案
             <ArrowRight class="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
