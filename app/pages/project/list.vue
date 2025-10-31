@@ -17,53 +17,96 @@ import type { Project } from '~/types/project'
 
 import FeaturedProject from '~/components/project/FeaturedProject.vue'
 import ProjectCard from '~/components/project/ProjectCard.vue'
+import { useProjectsStore } from '~/stores/projects'
+import type { ApiProject } from '~/types/project'
 
-// API Response Type
-interface ApiProject {
-  _id: string
-  title: string
-  imageURL: string
-  region: string
-  annual_yield_rate: string
-  contract_address: string
-  description: string
-  total_nft: number
-  nft_price: number
-  insurance_company: string
-  status: string
-  crop_name: string
+// API 回應型別
+interface ApiResponse {
+  ok: boolean
+  projects: ApiProject[]
 }
 
 // Transform API data to Project type
 const transformApiProject = (apiProject: ApiProject): Project => {
-  return {
-    id: apiProject._id,
-    name: apiProject.title,
-    location: apiProject.region,
-    cropType: apiProject.crop_name,
-    image: apiProject.imageURL,
-    expectedROI: parseFloat(apiProject.annual_yield_rate.replace('%', '')),
-    tokenizedShare: '收益權代幣化',
-    status: apiProject.status as Project['status'],
-    contractAddress: apiProject.contract_address || '待分配',
-    insuranceCoverage: !!apiProject.insurance_company,
-    insuranceProvider: apiProject.insurance_company || undefined,
+  if (!apiProject) {
+    return getDefaultProject()
   }
+
+  // 支援兩種資料格式：snake_case (舊格式) 和 camelCase (新格式)
+  const apiData = apiProject as any
+
+  // 安全地解析年化報酬率
+  let expectedROI = 0
+  const roiValue = apiData.expectedROI ?? apiData.annual_yield_rate
+  if (roiValue !== undefined && roiValue !== null) {
+    const rateStr = String(roiValue).replace('%', '').trim()
+    expectedROI = parseFloat(rateStr) || 0
+  }
+
+  // 處理狀態映射
+  const statusMap: Record<string, Project['status']> = {
+    '開放中': '開放中',
+    '已募資': '已募資',
+    '即將推出': '即將推出',
+    'open': '開放中',
+    'funded': '已募資',
+    'coming': '即將推出',
+  }
+  const status = apiData.status || '開放中'
+  const mappedStatus = statusMap[status] || '開放中'
+
+  // 構建轉換後的專案資料，支援兩種欄位命名格式
+  // 優先使用 _id，確保與 store 中的資料一致
+  const project: Project = {
+    id: apiData._id || apiData.id || '',
+    name: apiData.name || apiData.title || '未命名專案',
+    location: apiData.location || apiData.region || '未知地點',
+    cropType: apiData.cropType || apiData.crop_name || '未知作物',
+    image: apiData.image || apiData.imageURL || '/placeholder-project.jpg',
+    expectedROI,
+    tokenizedShare: apiData.tokenizedShare || '收益權代幣化',
+    status: mappedStatus,
+    contractAddress: apiData.contractAddress || apiData.contract_address || '待分配',
+    insuranceCoverage: apiData.insuranceCoverage !== undefined ? apiData.insuranceCoverage : !!apiData.insurance_company,
+    insuranceProvider: apiData.insuranceProvider || apiData.insurance_company || undefined,
+  }
+
+  return project
 }
 
-// Fetch projects from API - using proxy to avoid CORS issues
-const { data: apiData, pending, error, refresh } = useLazyFetch<ApiProject[]>('/api/getProjects', {
+// 提供預設專案結構，以防 API 資料不完整
+const getDefaultProject = (): Project => ({
+  id: '',
+  name: '載入中...',
+  location: '未知地點',
+  cropType: '未知作物',
+  image: '/placeholder-project.jpg',
+  expectedROI: 0,
+  tokenizedShare: '收益權代幣化',
+  status: '開放中',
+  contractAddress: '待分配',
+  insuranceCoverage: false,
+  insuranceProvider: undefined,
+})
+
+// 取得 projects store
+const projectsStore = useProjectsStore()
+
+// Fetch projects from API
+const { data: apiData, pending, error, refresh } = useLazyFetch<ApiResponse>('https://rwa-backend.vercel.app/api/getProjects', {
+  server: false, // 只在客戶端執行，避免 SSR 問題
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   },
-  onResponseError({ response }) {
-    console.error('API Response Error:', response.status, response.statusText)
-  },
-  onRequestError({ error: err }) {
-    console.error('API Request Error:', err.message)
-  },
 })
+
+// 監聽 apiData 變化，存入 store（存原始的 ApiProject 資料）
+watch(apiData, (newData) => {
+  if (newData?.ok && newData.projects && newData.projects.length > 0) {
+    projectsStore.setProjects(newData.projects)
+  }
+}, { immediate: true })
 
 // Function to retry loading
 const retryLoad = () => {
@@ -72,8 +115,11 @@ const retryLoad = () => {
 
 // Transform data
 const projects = computed(() => {
-  if (!apiData.value || apiData.value.length === 0) return []
-  return apiData.value.map(transformApiProject)
+  if (!apiData.value?.ok || !apiData.value.projects || apiData.value.projects.length === 0) {
+    return []
+  }
+
+  return apiData.value.projects.map(transformApiProject)
 })
 
 const currentPage = ref(1)
