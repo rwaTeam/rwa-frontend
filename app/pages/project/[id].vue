@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ArrowLeft, Leaf, Twitter, Github, Linkedin } from 'lucide-vue-next'
+import { ArrowLeft, Leaf, Twitter, Github, Linkedin, TrendingUp } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
+import Drawer from '~/components/ui/drawer/Drawer.vue'
 import HeroSection from '~/components/project/detail/HeroSection.vue'
 import FarmerProfile from '~/components/project/detail/FarmerProfile.vue'
 import ProjectAbout from '~/components/project/detail/ProjectAbout.vue'
@@ -33,7 +34,7 @@ const projectData = ref({
   expectedROI: 18.5,
   status: "開放中" as const,
   coverImage: "https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5nbyUyMGZhcm0lMjBhZXJpYWx8ZW58MXx8fHwxNzYxNzYwMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
-  minInvestment: 1000,
+  minInvestment: 0.001,
 })
 
 const farmerData = ref({
@@ -192,6 +193,9 @@ const social = [
   { name: 'Github', href: '#' },
   { name: 'LinkedIn', href: '#' },
 ]
+
+// 控制投資 Drawer 的顯示
+const showInvestmentDrawer = ref(false)
 </script>
 
 <template>
@@ -302,11 +306,12 @@ const social = [
           />
         </div>
 
-        <!-- Right Column - Investment Card (Sticky) -->
-        <div class="lg:col-span-1">
+        <!-- Right Column - Investment Card (Sticky) - 只在大螢幕顯示 -->
+        <div class="hidden lg:block lg:col-span-1">
           <InvestmentCard
             :expected-r-o-i="projectData.expectedROI"
             :min-investment="projectData.minInvestment"
+            :project-id="projectId as string"
           />
         </div>
       </div>
@@ -428,6 +433,33 @@ const social = [
         </div>
       </div>
     </footer>
+
+    <!-- 移動端浮動投資按鈕 - 只在小螢幕顯示 -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-secondary/10 shadow-2xl z-40 px-6 py-4">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex-1">
+          <p class="text-xs text-secondary/70 mb-1">預期年化報酬</p>
+          <p class="text-xl font-bold text-primary">{{ projectData.expectedROI }}%</p>
+        </div>
+        <Button
+          @click="showInvestmentDrawer = true"
+          class="bg-primary hover:bg-accent text-white px-8 py-6 text-base font-semibold"
+        >
+          <TrendingUp class="w-5 h-5 mr-2" />
+          立即投資
+        </Button>
+      </div>
+    </div>
+
+    <!-- 投資 Drawer - 只在小螢幕顯示 -->
+    <Drawer v-model:open="showInvestmentDrawer" title="投資專案">
+      <InvestmentCard
+        :expected-r-o-i="projectData.expectedROI"
+        :min-investment="projectData.minInvestment"
+        :project-id="projectId as string"
+        :is-in-drawer="true"
+      />
+    </Drawer>
   </div>
 </template>
 
