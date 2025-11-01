@@ -48,7 +48,7 @@
                       width: `${asset.funded}%`,
                       transition: { duration: 1000, delay: i * 200 + 500 }
                     }"
-                    class="h-full bg-gradient-to-r from-primary to-accent"
+                    class="h-full bg-gradient-to-r from-[#16B36D] to-[#FDBA45]"
                   />
                 </div>
               </div>
