@@ -20,5 +20,9 @@ import Insurance from '~/components/home/Insurance.vue'
 import FeaturedAssets from '~/components/home/FeaturedAssets.vue'
 import About from '~/components/home/About.vue'
 import Footer from '~/components/home/Footer.vue'
+
+useHead({
+  title: '首頁 | GreenFi Labs'
+})
 </script>
 

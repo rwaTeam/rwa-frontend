@@ -11,6 +11,11 @@ import { useNFTBalance } from '~/composables/useNFTBalance'
 import { getAddressUrl, shortenAddress } from '~/config/contract'
 import type { InvestorProject, InvestmentCardData } from '~/types/project'
 
+// 設定頁面標題
+useHead({
+  title: '我的投資組合 | GreenFi Labs'
+})
+
 // 投資標的數據
 const investments = ref<InvestmentCardData[]>([])
 const isLoadingInvestments = ref(false)

@@ -20,6 +20,11 @@ import ProjectCard from '~/components/project/ProjectCard.vue'
 import { useProjectsStore } from '~/stores/projects'
 import type { ApiProject } from '~/types/project'
 
+// 設定頁面標題
+useHead({
+  title: '專案列表 | GreenFi Labs'
+})
+
 // API 回應型別
 interface ApiResponse {
   ok: boolean
@@ -62,7 +67,7 @@ const transformApiProject = (apiProject: ApiProject): Project => {
     name: apiData.name || apiData.title || '未命名專案',
     location: apiData.location || apiData.region || '未知地點',
     cropType: apiData.cropType || apiData.crop_name || '未知作物',
-    image: apiData.image || apiData.imageURL || '/placeholder-project.jpg',
+    image: apiData.image || apiData.imageURL || 'https://plus.unsplash.com/premium_photo-1661823013705-d58ac4788630?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1740',
     expectedROI,
     tokenizedShare: apiData.tokenizedShare || '收益權代幣化',
     status: mappedStatus,

@@ -905,5 +905,10 @@ const handleCancel = () => {
     resetForm()
   }
 }
+
+// 設定頁面標題
+useHead({
+  title: '建立新計劃 | GreenFi Labs'
+})
 </script>
 

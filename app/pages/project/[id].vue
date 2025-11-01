@@ -19,12 +19,16 @@ import type { ApiProject, ContractData } from '~/types/project'
 const route = useRoute()
 const projectId = route.params.id as string
 
-// 頁面 meta 設定
+// 頁面 meta 設定（動態更新）
+const pageTitle = computed(() => {
+  if (apiProject.value?.title) {
+    return `${apiProject.value.title} | GreenFi Labs`
+  }
+  return '專案詳情 | GreenFi Labs'
+})
+
 useHead({
-  title: '專案詳情 - GreenFi Labs',
-  meta: [
-    { name: 'description', content: '查看農業投資專案的詳細資訊' }
-  ]
+  title: pageTitle
 })
 
 // 取得 stores 和 composables
@@ -170,7 +174,7 @@ const transformToDetailData = (apiProject: ApiProject, contractData?: ContractDa
       status: (apiProject.status === '開放中' || apiProject.status === '已募資' || apiProject.status === '即將推出') 
         ? apiProject.status as '開放中' | '已募資' | '即將推出'
         : '開放中' as const,
-      coverImage: apiProject.imageURL || "https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYW5nbyUyMGZhcm0lMjBhZXJpYWx8ZW58MXx8fHwxNzYxNzYwMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      coverImage: apiProject.imageURL || "https://plus.unsplash.com/premium_photo-1661823013705-d58ac4788630?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1740",
       minInvestment: 0.001,
     },
     _farmerData: {
