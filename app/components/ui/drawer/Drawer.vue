@@ -37,6 +37,7 @@ onUnmounted(() => {
 
 <template>
   <Teleport to="body">
+    <!-- 背景遮罩 -->
     <Transition
       enter-active-class="transition-opacity duration-300"
       enter-from-class="opacity-0"
@@ -47,11 +48,12 @@ onUnmounted(() => {
     >
       <div
         v-if="open"
-        class="fixed inset-0 bg-black/50 z-50 lg:hidden"
+        class="fixed inset-0 bg-black/50 z-50"
         @click="close"
       />
     </Transition>
 
+    <!-- 移動版：底部抽屜 -->
     <Transition
       enter-active-class="transition-transform duration-300 ease-out"
       enter-from-class="translate-y-full"
@@ -83,6 +85,47 @@ onUnmounted(() => {
         <!-- Drawer Content -->
         <div class="px-6 py-6">
           <slot />
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 桌面版：居中對話框 -->
+    <Transition
+      enter-active-class="transition-all duration-300 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition-all duration-300 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="open"
+        class="hidden lg:flex fixed inset-0 z-50 items-center justify-center p-4"
+        @click.self="close"
+      >
+        <div
+          class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+          @click.stop
+        >
+          <!-- Dialog Header -->
+          <div class="sticky top-0 bg-white border-b border-[#16B36D]/10 px-8 py-6 flex items-center justify-between rounded-t-3xl z-10">
+            <h3 v-if="title" class="text-2xl font-semibold text-[#262624]">
+              {{ title }}
+            </h3>
+            <div v-else />
+            <button
+              @click="close"
+              class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#16B36D]/10 transition-colors"
+              aria-label="關閉"
+            >
+              <X class="w-5 h-5 text-[#262624]" />
+            </button>
+          </div>
+
+          <!-- Dialog Content -->
+          <div class="px-8 py-6">
+            <slot />
+          </div>
         </div>
       </div>
     </Transition>
