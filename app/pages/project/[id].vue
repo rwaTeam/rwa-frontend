@@ -19,18 +19,6 @@ import type { ApiProject, ContractData } from '~/types/project'
 const route = useRoute()
 const projectId = route.params.id as string
 
-// 頁面 meta 設定（動態更新）
-const pageTitle = computed(() => {
-  if (apiProject.value?.title) {
-    return `${apiProject.value.title} | GreenFi Labs`
-  }
-  return '專案詳情 | GreenFi Labs'
-})
-
-useHead({
-  title: pageTitle
-})
-
 // 取得 stores 和 composables
 const projectsStore = useProjectsStore()
 const { fetchContractData } = useContractData()
@@ -43,6 +31,18 @@ const error = ref<string | null>(null)
 // 專案資料
 const apiProject = ref<ApiProject | null>(null)
 const contractData = ref<ContractData | null>(null)
+
+// 頁面 meta 設定（動態更新）
+const pageTitle = computed(() => {
+  if (apiProject.value?.title) {
+    return `${apiProject.value.title} | GreenFi Labs`
+  }
+  return '專案詳情 | GreenFi Labs'
+})
+
+useHead({
+  title: pageTitle
+})
 
 // 輔助函數：將任意專案資料轉換為 ApiProject 格式
 const normalizeProject = (project: any): ApiProject => {
