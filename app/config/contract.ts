@@ -1,8 +1,11 @@
 // 智能合約配置
 export const CONTRACT_CONFIG = {
-  // 合約地址
-  ADDRESS: '0xbAdF2c3B802B139A89D259e9F62255e92FdB477B',
+  // BankFactory 合約地址（用於創建和管理專案）
+  BANK_FACTORY_ADDRESS: '0xF9E2af07AB6d42E8Ac9d64f34C5Ac472Fc30F2bc',
   
+  // TWDT 代幣地址（用於支付或獎勵）
+  TWDT_TOKEN_ADDRESS: '0x30f97ba99AfE8db807aaCdC9d8513FDfD2507738',
+
   // Sepolia 測試網配置
   CHAIN_ID: 11155111,
   CHAIN_NAME: 'Sepolia',

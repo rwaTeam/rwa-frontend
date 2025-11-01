@@ -88,9 +88,10 @@ const loadInvestments = async () => {
         ])
 
         // 計算投資金額（NFT 數量 × 價格）
+        // 注意：nftPrice 已經是 TWDT 單位（6位小數）
         const investmentAmount = onChainData
-          ? (project.nftBalance * parseFloat(onChainData.nftPrice)).toFixed(4)
-          : (project.nftBalance * project.nft_price).toFixed(4)
+          ? (project.nftBalance * parseFloat(onChainData.nftPrice)).toFixed(2)
+          : (project.nftBalance * project.nft_price).toFixed(2)
 
         // 計算預期 ROI
         const expectedROI = parseFloat(project.annual_yield_rate.replace('%', ''))
@@ -108,7 +109,7 @@ const loadInvestments = async () => {
           expectedROI,
           projectProgress,
           status: 'active',
-          investDate: new Date().toISOString().split('T')[0], // 暫時使用當前日期
+          investDate: new Date().toISOString().split('T')[0] || new Date().toLocaleDateString('zh-TW'), // 暫時使用當前日期
           expectedReturnDate: '2025年12月31日', // 可以從合約或 API 獲取
           nftBalance: project.nftBalance,
         }
@@ -251,8 +252,8 @@ const hasInvestments = computed(() => investments.value.length > 0)
         <h1 class="text-[36px] font-semibold text-secondary mb-3">
           我的投資組合
         </h1>
-        <p class="text-gray-600 mb-6 max-w-3xl">
-          管理您的農業投資標的，追蹤收益並隨時提領您的回報
+                <p class="text-gray-600 mb-6 max-w-3xl">
+          管理您的農業投資標的，追蹤收益並隨時提領您的回報（使用 TWDT 代幣）
         </p>
 
         <!-- Wallet Status -->
@@ -305,7 +306,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
                   連結您的錢包
                 </h3>
                 <p class="text-gray-600 mb-3 max-w-xl">
-                  請先連接您的錢包以查看完整的投資組合資訊、追蹤收益並執行提領操作。我們支援 MetaMask 錢包。
+                  請先連接您的錢包以查看完整的投資組合資訊、追蹤收益並執行提領操作。投資與收益使用 TWDT 代幣計價，我們支援 MetaMask 錢包。
                 </p>
                 <div class="flex items-center gap-2 text-sm text-gray-500">
                   <CheckCircle class="w-4 h-4 text-primary" />
@@ -417,7 +418,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
               <h3 class="text-lg font-semibold text-secondary">總投資金額</h3>
             </div>
             <p class="text-3xl font-bold text-secondary mb-1">
-              {{ totalInvestment.toFixed(4) }} ETH
+              {{ totalInvestment.toFixed(2) }} TWDT
             </p>
             <p class="text-sm text-gray-600">共 {{ investments.length }} 個投資標的</p>
           </Card>
@@ -431,7 +432,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
               <h3 class="text-lg font-semibold text-secondary">未提取收益</h3>
             </div>
             <p class="text-3xl font-bold text-[#FD773D] mb-1">
-              {{ totalClaimableRewards.toFixed(4) }} ETH
+              {{ totalClaimableRewards.toFixed(2) }} TWDT
             </p>
             <p class="text-sm text-gray-600">可立即提領</p>
           </Card>
@@ -518,7 +519,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">投資金額</span>
-                <span class="text-sm font-medium text-secondary">{{ investment.investmentAmount }} ETH</span>
+                <span class="text-sm font-medium text-secondary">{{ parseFloat(investment.investmentAmount).toFixed(2) }} TWDT</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-gray-600">預期 ROI</span>
@@ -545,10 +546,10 @@ const hasInvestments = computed(() => investments.value.length > 0)
               <div class="flex justify-between items-center mb-2">
                 <span class="text-sm font-medium text-secondary">未提取收益</span>
                 <span class="text-2xl font-bold text-[#FD773D]">
-                  {{ parseFloat(investment.claimableRewards).toFixed(4) }} ETH
+                  {{ parseFloat(investment.claimableRewards).toFixed(2) }} TWDT
                 </span>
               </div>
-              <p class="text-xs text-gray-600">可立即提領至您的錢包</p>
+              <p class="text-xs text-gray-600">可立即提領至您的錢包（TWDT 代幣）</p>
             </div>
 
             <!-- Withdraw Button -->

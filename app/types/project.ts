@@ -80,3 +80,52 @@ export interface InvestmentCardData {
   nftBalance: number  // 持有 NFT 數量
 }
 
+// ===== 管理員功能相關類型 =====
+
+// 專案狀態枚舉
+export type ProjectStatus = 'pending' | 'approved' | 'rejected' | 'deployed'
+
+// 待審核專案資料結構（從後端提交 API 返回）
+export interface PendingProject {
+  _id: string
+  title: string
+  crop_type: string
+  location: string
+  farmer_id: string  // 農夫錢包地址
+  build_cost: number
+  annual_income: number
+  area: number
+  expected_yield: number
+  insurance_company?: string
+  has_insurance: boolean
+  description: string
+  images?: string[]
+  status: ProjectStatus
+  created_at: string
+  updated_at?: string
+  // 可選的審核資訊
+  reviewNote?: string
+  reviewedAt?: string
+  reviewedBy?: string
+}
+
+// 審核表單資料
+export interface ApprovalFormData {
+  projectId: string
+  action: 'approve' | 'reject'
+  totalNFTs: number  // NFT 總數量
+  nftPrice: number  // NFT 單價（ETH）
+  farmerAddress: string  // 農夫地址
+  investorShare: number  // 投資人分潤百分比 (0-100)
+  interestRate: number  // 利率百分比
+  premiumRate: number  // 溢價率百分比
+  reviewNote?: string  // 審核備註
+}
+
+// 鏈上專案查詢資料
+export interface OnChainProjectData extends ProjectOnChainData {
+  contractAddress: string
+  deployedAt?: string
+  deployer?: string
+}
+
