@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { nextTick } from 'vue'
 import { Leaf, Wallet, ExternalLink, Download, TrendingUp, DollarSign, Calendar, AlertCircle, CheckCircle, RefreshCw } from 'lucide-vue-next'
 import Card from '~/components/ui/card/Card.vue'
 import Button from '~/components/ui/button/Button.vue'
@@ -16,10 +17,58 @@ useHead({
   title: '我的投資組合 | GreenFi Labs'
 })
 
+// Mock 投資數據
+const mockInvestments: InvestmentCardData[] = [
+  {
+    id: 'mock-1',
+    projectName: '台灣有機稻米計畫 2024',
+    projectImage: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800',
+    contractAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+    investmentAmount: '1500.00',
+    claimableRewards: '45.50',
+    expectedROI: 8.5,
+    projectProgress: 65.5,
+    status: 'active',
+    investDate: '2024-06-15',
+    expectedReturnDate: '2025年12月31日',
+    nftBalance: 15,
+  },
+  {
+    id: 'mock-2',
+    projectName: '花蓮無毒蔬菜農場',
+    projectImage: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800',
+    contractAddress: '0x8ba1f109551bD432803012645Ac136ddd64DBA72',
+    investmentAmount: '2200.00',
+    claimableRewards: '78.20',
+    expectedROI: 10.2,
+    projectProgress: 42.3,
+    status: 'active',
+    investDate: '2024-07-22',
+    expectedReturnDate: '2025年12月31日',
+    nftBalance: 22,
+  },
+  {
+    id: 'mock-3',
+    projectName: '南投高山茶園永續計畫',
+    projectImage: 'https://images.unsplash.com/photo-1563822249548-9a72b6d9c3f2?w=800',
+    contractAddress: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+    investmentAmount: '3500.00',
+    claimableRewards: '122.50',
+    expectedROI: 12.0,
+    projectProgress: 78.8,
+    status: 'active',
+    investDate: '2024-05-10',
+    expectedReturnDate: '2025年12月31日',
+    nftBalance: 35,
+  },
+]
+
 // 投資標的數據
 const investments = ref<InvestmentCardData[]>([])
 const isLoadingInvestments = ref(false)
 const loadError = ref<string | null>(null)
+const isUsingMockData = ref(false)
+const showRealDataNotification = ref(false)
 
 // Web3 整合
 const {
@@ -40,8 +89,25 @@ const projectsStore = useProjectsStore()
 const { batchGetNFTBalances, getProjectOnChainData, getClaimableReward } = useNFTBalance()
 
 // 組件掛載時檢測 MetaMask
-onMounted(() => {
+onMounted(async () => {
+  console.log('[onMounted] 開始初始化')
   web3Store.checkMetaMask()
+  
+  // 等待一下，讓錢包狀態更新
+  await nextTick()
+  
+  // 如果已經連接了錢包，立即顯示 Mock 數據
+  if (isConnected.value && account.value) {
+    console.log('[onMounted] 檢測到錢包已連接，顯示 Mock 數據')
+    investments.value = [...mockInvestments]
+    isUsingMockData.value = true
+    
+    // 載入真實數據
+    await nextTick()
+    loadInvestments()
+  }
+  
+  console.log('[onMounted] 初始化完成，isConnected:', isConnected.value, 'account:', account.value)
 })
 
 // 載入投資標的
@@ -122,22 +188,71 @@ const loadInvestments = async () => {
     })
 
     const results = await Promise.all(investmentPromises)
-    investments.value = results.filter((inv) => inv !== null) as InvestmentCardData[]
+    const realInvestments = results.filter((inv) => inv !== null) as InvestmentCardData[]
+    
+    console.log('[Load Investments] 真實數據載入完成，共', realInvestments.length, '個投資標的')
+    
+    // 更新為真實數據（只有當有真實投資時才替換 Mock 數據）
+    const wasMockData = isUsingMockData.value
+    
+    if (realInvestments.length > 0) {
+      // 有真實投資數據，替換 Mock 數據
+      investments.value = realInvestments
+      isUsingMockData.value = false
+      
+      // 如果之前顯示的是 Mock 數據，顯示真實數據載入通知
+      if (wasMockData) {
+        showRealDataNotification.value = true
+        toast.success('真實投資數據已載入')
+        
+        // 3 秒後隱藏通知
+        setTimeout(() => {
+          showRealDataNotification.value = false
+        }, 3000)
+      }
+    } else {
+      // 沒有真實投資，保持顯示 Mock 數據
+      console.log('[Load Investments] 用戶沒有真實投資，繼續顯示 Mock 數據')
+      if (investments.value.length === 0) {
+        investments.value = [...mockInvestments]
+        isUsingMockData.value = true
+      }
+    }
   } catch (error: any) {
     console.error('載入投資標的失敗:', error)
     loadError.value = error.message || '載入失敗，請重試'
     toast.error('載入投資標的失敗')
+    
+    // 如果載入失敗，保留 Mock 數據
+    if (investments.value.length === 0) {
+      investments.value = mockInvestments
+      isUsingMockData.value = true
+    }
   } finally {
     isLoadingInvestments.value = false
   }
 }
 
 // 監聽錢包連接狀態變化
-watch([isConnected, account], ([connected, acc]) => {
+watch([isConnected, account], async ([connected, acc], [wasConnected, wasAccount]) => {
+  console.log('[Watch] 錢包狀態變化:', { connected, acc, wasConnected, wasAccount })
+  
   if (connected && acc) {
+    // 立即顯示 Mock 數據
+    console.log('[Watch] 顯示 Mock 數據')
+    investments.value = [...mockInvestments]
+    isUsingMockData.value = true
+    
+    // 延遲一下再載入真實數據，確保 UI 先渲染
+    await nextTick()
+    
+    // 然後在背景載入真實數據
+    console.log('[Watch] 開始載入真實數據')
     loadInvestments()
   } else {
+    console.log('[Watch] 清空投資數據')
     investments.value = []
+    isUsingMockData.value = false
   }
 }, { immediate: true })
 
