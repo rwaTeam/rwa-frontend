@@ -325,7 +325,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PendingProject, ApprovalFormData, ApiProject, ProjectOnChainData } from '~/types/project'
+import type { PendingProject, ApiProject, ProjectOnChainData } from '~/types/project'
 import { 
   FileCheck, 
   Link2, 
@@ -341,7 +341,6 @@ import { Button } from '~/components/ui/button'
 import PendingProjectCard from '~/components/admin/PendingProjectCard.vue'
 import OnChainProjectCard from '~/components/admin/OnChainProjectCard.vue'
 import ApprovalDialog from '~/components/admin/ApprovalDialog.vue'
-import { useAdminApi } from '~/composables/useAdminApi'
 import { useProjectsStore } from '~/stores/projects'
 import { getAddressUrl, shortenAddress } from '~/config/contract'
 
@@ -351,7 +350,7 @@ useHead({
 })
 
 // API & Store
-const adminApi = useAdminApi()
+const API_BASE_URL = 'https://rwa-backend.vercel.app'
 const projectsStore = useProjectsStore()
 
 // 狀態
@@ -402,10 +401,37 @@ onMounted(async () => {
 const refreshPendingProjects = async () => {
   isLoading.value = true
   try {
-    pendingProjects.value = await adminApi.fetchPendingProjects()
+    console.log('[Admin API] 開始取得待審核專案...')
+    
+    const { data, error } = await useFetch(`${API_BASE_URL}/api/projects/pending`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (error.value) {
+      throw new Error(`HTTP 錯誤！狀態：${error.value}`)
+    }
+
+    console.log('[Admin API] 待審核專案回應:', data.value)
+
+    // 處理不同的回應格式
+    const result = data.value as any
+    if (Array.isArray(result)) {
+      pendingProjects.value = result
+    } else if (result?.data && Array.isArray(result.data)) {
+      pendingProjects.value = result.data
+    } else if (result?.projects && Array.isArray(result.projects)) {
+      pendingProjects.value = result.projects
+    } else {
+      pendingProjects.value = []
+    }
   } catch (error) {
     showToast('載入待審核專案失敗', 'error')
     console.error(error)
+    pendingProjects.value = []
   } finally {
     isLoading.value = false
   }
@@ -415,11 +441,38 @@ const refreshPendingProjects = async () => {
 const refreshDeployedProjects = async () => {
   isLoading.value = true
   try {
-    const projects = await adminApi.fetchAllProjects()
-    deployedProjects.value = projects.filter(p => p.contract_address)
+    console.log('[Admin API] 開始取得所有專案...')
+
+    const { data, error } = await useFetch(`${API_BASE_URL}/api/getProjects`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (error.value) {
+      throw new Error(`HTTP 錯誤！狀態：${error.value}`)
+    }
+
+    console.log('[Admin API] 所有專案回應:', data.value)
+
+    // 處理不同的回應格式
+    const result = data.value as any
+    let allProjectsList: ApiProject[] = []
+    if (Array.isArray(result)) {
+      allProjectsList = result
+    } else if (result?.data && Array.isArray(result.data)) {
+      allProjectsList = result.data
+    } else if (result?.projects && Array.isArray(result.projects)) {
+      allProjectsList = result.projects
+    }
+
+    deployedProjects.value = allProjectsList.filter(p => p.contract_address)
   } catch (error) {
     showToast('載入已上鏈專案失敗', 'error')
     console.error(error)
+    deployedProjects.value = []
   } finally {
     isLoading.value = false
   }
@@ -429,14 +482,53 @@ const refreshDeployedProjects = async () => {
 const refreshAllProjects = async () => {
   isLoading.value = true
   try {
-    const [pending, deployed] = await Promise.all([
-      adminApi.fetchPendingProjects(),
-      adminApi.fetchAllProjects(),
+    console.log('[Admin API] 開始取得所有專案（pending + deployed）...')
+
+    const [pendingRes, deployedRes] = await Promise.all([
+      useFetch(`${API_BASE_URL}/api/projects/pending`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      }),
+      useFetch(`${API_BASE_URL}/api/getProjects`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      }),
     ])
+
+    // 處理待審核專案
+    const pendingResult = pendingRes.data.value as any
+    let pending: PendingProject[] = []
+    if (Array.isArray(pendingResult)) {
+      pending = pendingResult
+    } else if (pendingResult?.data && Array.isArray(pendingResult.data)) {
+      pending = pendingResult.data
+    } else if (pendingResult?.projects && Array.isArray(pendingResult.projects)) {
+      pending = pendingResult.projects
+    }
+
+    // 處理已部署專案
+    const deployedResult = deployedRes.data.value as any
+    let deployed: ApiProject[] = []
+    if (Array.isArray(deployedResult)) {
+      deployed = deployedResult
+    } else if (deployedResult?.data && Array.isArray(deployedResult.data)) {
+      deployed = deployedResult.data
+    } else if (deployedResult?.projects && Array.isArray(deployedResult.projects)) {
+      deployed = deployedResult.projects
+    }
+
     allProjects.value = [...pending, ...deployed]
+    console.log('[Admin API] 取得全部專案成功:', allProjects.value.length)
   } catch (error) {
     showToast('載入專案失敗', 'error')
     console.error(error)
+    allProjects.value = []
   } finally {
     isLoading.value = false
   }
@@ -450,56 +542,48 @@ const handleReviewProject = (project: PendingProject) => {
 
 // 處理快速通過（使用預設參數）
 const handleQuickApprove = async (project: PendingProject) => {
-  const confirmApprove = confirm(
-    `確定要快速通過專案「${project.title}」嗎？\n\n將使用以下預設參數：\n` +
-    `- NFT 總數量: 150\n` +
-    `- NFT 單價: 100 TWDT\n` +
-    `- 投資人分潤: 70%\n` +
-    `- 利率: 5%\n` +
-    `- 溢價率: 10%\n\n` +
-    `注意：所有金額使用 TWDT 代幣計價`
-  )
-  
-  if (!confirmApprove) return
-
-  const formData: ApprovalFormData = {
-    projectId: project._id,
-    action: 'approve',
-    totalNFTs: 150,
-    nftPrice: 100, // TWDT 單位
-    farmerAddress: project.farmer_id,
-    investorShare: 70,
-    interestRate: 5,
-    premiumRate: 10,
-    reviewNote: '快速審核通過',
-  }
-
+  isLoading.value = true
   try {
-    const result = await adminApi.approveProject(formData)
+    const { data, error } = await useFetch('https://rwa-backend.vercel.app/api/projects/adminagree', {
+      method: 'POST',
+      body: {
+        _id: project._id,
+      },
+    })
     
-    if (result.ok) {
-      showToast('專案快速通過，正在部署至區塊鏈...', 'success')
+    if (error.value) {
+      showToast(error.value.message || '審核失敗', 'error')
+    } else {
+      showToast('專案審核通過，正在部署至區塊鏈...', 'success')
       
       // 延遲後重新整理列表
       setTimeout(async () => {
         await refreshPendingProjects()
         await refreshDeployedProjects()
       }, 2000)
-    } else {
-      showToast(result.error || '快速審核失敗', 'error')
     }
   } catch (error: any) {
-    showToast(error.message || '快速審核失敗', 'error')
+    showToast(error.message || '審核失敗', 'error')
     console.error(error)
+  } finally {
+    isLoading.value = false
   }
 }
 
 // 處理通過審核
-const handleApproveProject = async (formData: ApprovalFormData) => {
+const handleApproveProject = async (projectId: string) => {
+  isLoading.value = true
   try {
-    const result = await adminApi.approveProject(formData)
+    const { data, error } = await useFetch('https://rwa-backend.vercel.app/api/projects/adminagree', {
+      method: 'POST',
+      body: {
+        _id: projectId,
+      },
+    })
     
-    if (result.ok) {
+    if (error.value) {
+      showToast(error.value.message || '審核失敗', 'error')
+    } else {
       showToast('專案審核通過，正在部署至區塊鏈...', 'success')
       showApprovalDialog.value = false
       
@@ -508,41 +592,71 @@ const handleApproveProject = async (formData: ApprovalFormData) => {
         await refreshPendingProjects()
         await refreshDeployedProjects()
       }, 2000)
-    } else {
-      // showToast(result.error || '審核失敗', 'error')
     }
   } catch (error: any) {
-    // showToast(error.message || '審核失敗', 'error')
+    showToast(error.message || '審核失敗', 'error')
     console.error(error)
+  } finally {
+    isLoading.value = false
   }
 }
 
 // 處理拒絕專案
 const handleRejectProject = async (projectId: string, reason?: string) => {
+  isLoading.value = true
   try {
-    const result = await adminApi.rejectProject(projectId, reason)
+    const { data, error } = await useFetch('https://rwa-backend.vercel.app/api/projects/approve', {
+      method: 'POST',
+      body: {
+        _id: projectId,
+        action: 'reject',
+        reviewNote: reason || '不符合審核標準',
+      },
+    })
     
-    if (result.ok) {
+    if (error.value) {
+      showToast(error.value.message || '拒絕失敗', 'error')
+    } else {
       showToast('專案已拒絕', 'success')
       showApprovalDialog.value = false
       
       // 重新整理列表
       await refreshPendingProjects()
-    } else {
-      // showToast(result.error || '拒絕失敗', 'error')
     }
   } catch (error: any) {
-    // showToast(error.message || '拒絕失敗', 'error')
+    showToast(error.message || '拒絕失敗', 'error')
     console.error(error)
+  } finally {
+    isLoading.value = false
   }
 }
 
 // 刷新鏈上資料
 const handleRefreshOnChainData = async (contractAddress: string) => {
   try {
-    const data = await adminApi.fetchProjectOnChainData(contractAddress)
-    if (data) {
-      onChainDataMap.value.set(contractAddress, data)
+    console.log('[Admin API] 開始查詢鏈上資料:', contractAddress)
+
+    const { data, error } = await useFetch(
+      `${API_BASE_URL}/api/con/project/data?projectAddress=${contractAddress}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (error.value) {
+      throw new Error(`HTTP 錯誤！狀態：${error.value}`)
+    }
+
+    console.log('[Admin API] 鏈上資料回應:', data.value)
+
+    const result = data.value as any
+    const onChainData = result?.data || result
+    if (onChainData) {
+      onChainDataMap.value.set(contractAddress, onChainData)
       showToast('鏈上資料已更新', 'success')
     }
   } catch (error) {

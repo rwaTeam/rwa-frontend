@@ -73,161 +73,46 @@
         <!-- 分隔線 -->
         <div class="border-t border-[#16B36D]/10" />
 
-        <!-- 審核參數表單 -->
+        <!-- 審核確認 -->
         <div class="space-y-6">
           <h3 class="text-xl font-semibold text-[#262624] flex items-center gap-2">
             <Settings class="w-5 h-5 text-[#16B36D]" />
-            部署參數設定
+            審核確認
           </h3>
 
-          <div class="grid grid-cols-2 gap-6">
-            <!-- NFT 總數量 -->
-            <div class="space-y-2">
-              <Label for="totalNFTs" class="text-sm font-medium text-[#272D27]">
-                NFT 總數量 <span class="text-[#E74C3C]">*</span>
-              </Label>
-              <Input
-                id="totalNFTs"
-                v-model.number="formData.totalNFTs"
-                type="number"
-                placeholder="例：150"
-                :class="{ 'border-[#E74C3C]': errors.totalNFTs }"
-              />
-              <p v-if="errors.totalNFTs" class="text-xs text-[#E74C3C]">
-                {{ errors.totalNFTs }}
-              </p>
-            </div>
-
-            <!-- NFT 單價 -->
-            <div class="space-y-2">
-              <Label for="nftPrice" class="text-sm font-medium text-[#272D27]">
-                NFT 單價 (TWDT) <span class="text-[#E74C3C]">*</span>
-              </Label>
-              <Input
-                id="nftPrice"
-                v-model.number="formData.nftPrice"
-                type="number"
-                step="0.01"
-                placeholder="例：100"
-                :class="{ 'border-[#E74C3C]': errors.nftPrice }"
-              />
-              <p v-if="errors.nftPrice" class="text-xs text-[#E74C3C]">
-                {{ errors.nftPrice }}
-              </p>
-              <p class="text-xs text-[#272D27]/60">使用 TWDT 代幣計價</p>
-            </div>
-
-            <!-- 投資人分潤百分比 -->
-            <div class="space-y-2">
-              <Label for="investorShare" class="text-sm font-medium text-[#272D27]">
-                投資人分潤 (%) <span class="text-[#E74C3C]">*</span>
-              </Label>
-              <Input
-                id="investorShare"
-                v-model.number="formData.investorShare"
-                type="number"
-                min="0"
-                max="100"
-                placeholder="例：70"
-                :class="{ 'border-[#E74C3C]': errors.investorShare }"
-              />
-              <p v-if="errors.investorShare" class="text-xs text-[#E74C3C]">
-                {{ errors.investorShare }}
-              </p>
-            </div>
-
-            <!-- 利率 -->
-            <div class="space-y-2">
-              <Label for="interestRate" class="text-sm font-medium text-[#272D27]">
-                利率 (%) <span class="text-[#E74C3C]">*</span>
-              </Label>
-              <Input
-                id="interestRate"
-                v-model.number="formData.interestRate"
-                type="number"
-                step="0.1"
-                placeholder="例：5"
-                :class="{ 'border-[#E74C3C]': errors.interestRate }"
-              />
-              <p v-if="errors.interestRate" class="text-xs text-[#E74C3C]">
-                {{ errors.interestRate }}
-              </p>
-            </div>
-
-            <!-- 溢價率 -->
-            <div class="space-y-2">
-              <Label for="premiumRate" class="text-sm font-medium text-[#272D27]">
-                溢價率 (%) <span class="text-[#E74C3C]">*</span>
-              </Label>
-              <Input
-                id="premiumRate"
-                v-model.number="formData.premiumRate"
-                type="number"
-                step="0.1"
-                placeholder="例：10"
-                :class="{ 'border-[#E74C3C]': errors.premiumRate }"
-              />
-              <p v-if="errors.premiumRate" class="text-xs text-[#E74C3C]">
-                {{ errors.premiumRate }}
-              </p>
-            </div>
-
-            <!-- 農夫地址確認 -->
-            <div class="space-y-2">
-              <Label for="farmerAddress" class="text-sm font-medium text-[#272D27]">
-                農夫地址 <span class="text-[#E74C3C]">*</span>
-              </Label>
-              <Input
-                id="farmerAddress"
-                v-model="formData.farmerAddress"
-                placeholder="0x..."
-                :class="{ 'border-[#E74C3C]': errors.farmerAddress }"
-              />
-              <p v-if="errors.farmerAddress" class="text-xs text-[#E74C3C]">
-                {{ errors.farmerAddress }}
-              </p>
+          <!-- 審核說明 -->
+          <div class="p-6 bg-gradient-to-br from-[#16B36D]/10 to-[#A4E2C2]/10 rounded-2xl space-y-3">
+            <p class="text-sm text-[#272D27]/80">
+              專案將使用系統預設參數進行審核和上鏈部署。部署成功後，專案將自動上架至投資平台。
+            </p>
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="flex items-center gap-2">
+                <CheckCircle class="w-4 h-4 text-[#16B36D]" />
+                <span class="text-[#272D27]/70">自動配置 NFT 參數</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <CheckCircle class="w-4 h-4 text-[#16B36D]" />
+                <span class="text-[#272D27]/70">使用 TWDT 代幣計價</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <CheckCircle class="w-4 h-4 text-[#16B36D]" />
+                <span class="text-[#272D27]/70">部署至區塊鏈並生成合約地址</span>
+              </div>
             </div>
           </div>
 
           <!-- 審核備註 -->
           <div class="space-y-2">
             <Label for="reviewNote" class="text-sm font-medium text-[#272D27]">
-              審核備註
+              審核備註（選填）
             </Label>
             <textarea
               id="reviewNote"
-              v-model="formData.reviewNote"
+              v-model="reviewNote"
               rows="3"
               class="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors outline-none focus-visible:border-[#16B36D] focus-visible:ring-[#16B36D]/50 focus-visible:ring-[3px]"
               placeholder="輸入審核備註（選填）"
             />
-          </div>
-
-          <!-- 計算摘要 -->
-          <div class="p-6 bg-gradient-to-br from-[#16B36D]/10 to-[#A4E2C2]/10 rounded-2xl space-y-3">
-            <h4 class="text-base font-semibold text-[#262624] mb-3">
-              投資概覽（TWDT 代幣）
-            </h4>
-            <div class="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <p class="text-[#272D27]/60">總募資額</p>
-                <p class="text-lg font-bold text-[#16B36D] mt-1">
-                  {{ totalFunding }} TWDT
-                </p>
-              </div>
-              <div>
-                <p class="text-[#272D27]/60">投資人可獲收益</p>
-                <p class="text-lg font-bold text-[#16B36D] mt-1">
-                  {{ investorRevenue }} TWDT
-                </p>
-              </div>
-              <div>
-                <p class="text-[#272D27]/60">預估年化報酬率</p>
-                <p class="text-lg font-bold text-[#16B36D] mt-1">
-                  {{ estimatedROI }}%
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -254,7 +139,7 @@
           </Button>
           <Button
             @click="handleApprove"
-            :disabled="isLoading || !isFormValid"
+            :disabled="isLoading"
             class="flex-1 bg-[#16B36D] hover:bg-[#16B36D]/90 text-white"
           >
             <CheckCircle class="w-4 h-4 mr-2" />
@@ -267,11 +152,10 @@
 </template>
 
 <script setup lang="ts">
-import type { PendingProject, ApprovalFormData } from '~/types/project'
+import type { PendingProject } from '~/types/project'
 import { FileText, Settings, CheckCircle, XCircle } from 'lucide-vue-next'
 import { Drawer } from '~/components/ui/drawer'
 import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Badge } from '~/components/ui/badge'
 
@@ -284,123 +168,25 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
-  approve: [data: ApprovalFormData]
+  approve: [projectId: string]
   reject: [projectId: string, reason?: string]
 }>()
 
-// 表單資料
-const formData = ref({
-  totalNFTs: 150,
-  nftPrice: 100,
-  farmerAddress: '',
-  investorShare: 70,
-  interestRate: 5,
-  premiumRate: 10,
-  reviewNote: '',
-})
-
-// 錯誤訊息
-const errors = ref<Record<string, string>>({})
+// 審核備註
+const reviewNote = ref('')
 
 // 載入狀態
 const isLoading = ref(false)
 
-// 監聽專案變化，自動填充農夫地址
-watch(() => props.project, (newProject) => {
-  if (newProject) {
-    formData.value.farmerAddress = newProject.farmer_id
-  }
-}, { immediate: true })
-
-// 計算總募資額
-const totalFunding = computed(() => {
-  const total = formData.value.totalNFTs * formData.value.nftPrice
-  return total.toFixed(2)
-})
-
-// 計算投資人可獲收益
-const investorRevenue = computed(() => {
-  if (!props.project) return '0.00'
-  const revenue = props.project.annual_income * (formData.value.investorShare / 100)
-  return revenue.toFixed(2)
-})
-
-// 計算預估年化報酬率
-const estimatedROI = computed(() => {
-  const funding = parseFloat(totalFunding.value)
-  const revenue = parseFloat(investorRevenue.value)
-  if (funding === 0) return '0.00'
-  const roi = (revenue / funding) * 100
-  return roi.toFixed(2)
-})
-
-// 表單驗證
-const isFormValid = computed(() => {
-  return (
-    formData.value.totalNFTs > 0 &&
-    formData.value.nftPrice > 0 &&
-    formData.value.farmerAddress &&
-    formData.value.investorShare >= 0 &&
-    formData.value.investorShare <= 100 &&
-    formData.value.interestRate >= 0 &&
-    formData.value.premiumRate >= 0
-  )
-})
-
-// 驗證表單
-const validateForm = (): boolean => {
-  errors.value = {}
-
-  if (!formData.value.totalNFTs || formData.value.totalNFTs <= 0) {
-    errors.value.totalNFTs = '請輸入有效的 NFT 數量'
-  }
-
-  if (!formData.value.nftPrice || formData.value.nftPrice <= 0) {
-    errors.value.nftPrice = '請輸入有效的 NFT 單價'
-  }
-
-  if (!formData.value.farmerAddress) {
-    errors.value.farmerAddress = '請輸入農夫地址'
-  } else if (!/^0x[a-fA-F0-9]{40}$/.test(formData.value.farmerAddress)) {
-    errors.value.farmerAddress = '請輸入有效的以太坊地址'
-  }
-
-  if (formData.value.investorShare < 0 || formData.value.investorShare > 100) {
-    errors.value.investorShare = '投資人分潤必須在 0-100 之間'
-  }
-
-  if (formData.value.interestRate < 0) {
-    errors.value.interestRate = '利率不能為負數'
-  }
-
-  if (formData.value.premiumRate < 0) {
-    errors.value.premiumRate = '溢價率不能為負數'
-  }
-
-  return Object.keys(errors.value).length === 0
-}
-
 // 處理通過審核
 const handleApprove = async () => {
-  if (!props.project || !validateForm()) {
+  if (!props.project) {
     return
   }
 
   isLoading.value = true
-
-  const approvalData: ApprovalFormData = {
-    projectId: props.project._id,
-    action: 'approve',
-    totalNFTs: formData.value.totalNFTs,
-    nftPrice: formData.value.nftPrice,
-    farmerAddress: formData.value.farmerAddress,
-    investorShare: formData.value.investorShare,
-    interestRate: formData.value.interestRate,
-    premiumRate: formData.value.premiumRate,
-    reviewNote: formData.value.reviewNote,
-  }
-
-  emit('approve', approvalData)
+  
+  emit('approve', props.project._id)
   
   // 等待父組件處理完成
   await new Promise(resolve => setTimeout(resolve, 1000))
@@ -412,12 +198,9 @@ const handleApprove = async () => {
 const handleReject = async () => {
   if (!props.project) return
 
-  const confirmReject = confirm('確定要拒絕此專案嗎？此操作無法撤銷。')
-  if (!confirmReject) return
-
   isLoading.value = true
   
-  emit('reject', props.project._id, formData.value.reviewNote || '不符合審核標準')
+  emit('reject', props.project._id, reviewNote.value || '不符合審核標準')
   
   await new Promise(resolve => setTimeout(resolve, 1000))
   
