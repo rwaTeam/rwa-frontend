@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick } from 'vue'
-import { Leaf, Wallet, ExternalLink, Download, TrendingUp, DollarSign, Calendar, AlertCircle, CheckCircle, RefreshCw } from 'lucide-vue-next'
+import { Leaf, Wallet, ExternalLink, Download, TrendingUp, DollarSign, Calendar, AlertCircle, CheckCircle, RefreshCw, Copy } from 'lucide-vue-next'
 import Card from '~/components/ui/card/Card.vue'
 import Button from '~/components/ui/button/Button.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
@@ -17,58 +17,10 @@ useHead({
   title: '我的投資組合 | GreenFi Labs'
 })
 
-// Mock 投資數據
-const mockInvestments: InvestmentCardData[] = [
-  {
-    id: 'mock-1',
-    projectName: '台灣有機稻米計畫 2024',
-    projectImage: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=800',
-    contractAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-    investmentAmount: '1500.00',
-    claimableRewards: '45.50',
-    expectedROI: 8.5,
-    projectProgress: 65.5,
-    status: 'active',
-    investDate: '2024-06-15',
-    expectedReturnDate: '2025年12月31日',
-    nftBalance: 15,
-  },
-  {
-    id: 'mock-2',
-    projectName: '花蓮無毒蔬菜農場',
-    projectImage: 'https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=800',
-    contractAddress: '0x8ba1f109551bD432803012645Ac136ddd64DBA72',
-    investmentAmount: '2200.00',
-    claimableRewards: '78.20',
-    expectedROI: 10.2,
-    projectProgress: 42.3,
-    status: 'active',
-    investDate: '2024-07-22',
-    expectedReturnDate: '2025年12月31日',
-    nftBalance: 22,
-  },
-  {
-    id: 'mock-3',
-    projectName: '南投高山茶園永續計畫',
-    projectImage: 'https://images.unsplash.com/photo-1563822249548-9a72b6d9c3f2?w=800',
-    contractAddress: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
-    investmentAmount: '3500.00',
-    claimableRewards: '122.50',
-    expectedROI: 12.0,
-    projectProgress: 78.8,
-    status: 'active',
-    investDate: '2024-05-10',
-    expectedReturnDate: '2025年12月31日',
-    nftBalance: 35,
-  },
-]
-
 // 投資標的數據
 const investments = ref<InvestmentCardData[]>([])
 const isLoadingInvestments = ref(false)
 const loadError = ref<string | null>(null)
-const isUsingMockData = ref(false)
-const showRealDataNotification = ref(false)
 
 // Web3 整合
 const {
@@ -78,9 +30,12 @@ const {
   hasMetaMask,
   shortAccount,
   balance,
+  tokenBalance,
   getAddressLink,
   formatAddress,
   account,
+  updateBalance,
+  updateTokenBalance,
 } = useWeb3()
 
 const toast = useToast()
@@ -88,23 +43,17 @@ const web3Store = useWeb3Store()
 const projectsStore = useProjectsStore()
 const { batchGetNFTBalances, getProjectOnChainData, getClaimableReward } = useNFTBalance()
 
-// 組件掛載時檢測 MetaMask
+// 組件掛載時檢測 MetaMask（已由 useWeb3 處理）
 onMounted(async () => {
   console.log('[onMounted] 開始初始化')
-  web3Store.checkMetaMask()
   
   // 等待一下，讓錢包狀態更新
   await nextTick()
   
-  // 如果已經連接了錢包，立即顯示 Mock 數據
+  // 如果已經連接了錢包，載入投資數據
   if (isConnected.value && account.value) {
-    console.log('[onMounted] 檢測到錢包已連接，顯示 Mock 數據')
-    investments.value = [...mockInvestments]
-    isUsingMockData.value = true
-    
-    // 載入真實數據
-    await nextTick()
-    loadInvestments()
+    console.log('[onMounted] 檢測到錢包已連接，開始載入投資數據')
+    await loadInvestments()
   }
   
   console.log('[onMounted] 初始化完成，isConnected:', isConnected.value, 'account:', account.value)
@@ -144,14 +93,19 @@ const loadInvestments = async () => {
     )
 
     console.log('[Load Investments] 批量查詢完成，持有的專案:', projectsWithBalance)
+    
+    // 詳細顯示每個專案的 unclaimedRewards
+    projectsWithBalance.forEach(p => {
+      console.log(`[Load Investments] 專案 ${p.title} 的 unclaimedRewards:`, p.unclaimedRewards)
+    })
 
     // 3. 對每個持有的專案查詢詳細數據
     const investmentPromises = projectsWithBalance.map(async (project) => {
       try {
-        const [onChainData, claimableReward] = await Promise.all([
-          getProjectOnChainData(project.contract_address),
-          getClaimableReward(project.contract_address, account.value!),
-        ])
+        console.log(`[Load Investments] 處理專案 ${project.title}, unclaimedRewards: ${project.unclaimedRewards}`)
+        
+        // 查詢鏈上數據（不再需要單獨查詢 claimableReward，已包含在 project 中）
+        const onChainData = await getProjectOnChainData(project.contract_address)
 
         // 計算投資金額（NFT 數量 × 價格）
         // 注意：nftPrice 已經是 TWDT 單位（6位小數）
@@ -168,10 +122,10 @@ const loadInvestments = async () => {
         const investmentCard: InvestmentCardData = {
           id: project._id,
           projectName: project.title,
-          projectImage: project.imageURL,
+          projectImage: project.imageURL || 'https://plus.unsplash.com/premium_photo-1661823013705-d58ac4788630?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1740',
           contractAddress: project.contract_address,
           investmentAmount,
-          claimableRewards: claimableReward,
+          unclaimedRewards: project.unclaimedRewards, // 直接使用批量查詢返回的數據
           expectedROI,
           projectProgress,
           status: 'active',
@@ -179,6 +133,12 @@ const loadInvestments = async () => {
           expectedReturnDate: '2025年12月31日', // 可以從合約或 API 獲取
           nftBalance: project.nftBalance,
         }
+        
+        console.log(`[Load Investments] ✓ 投資卡片建立完成:`, {
+          projectName: investmentCard.projectName,
+          unclaimedRewards: investmentCard.unclaimedRewards,
+          investmentAmount: investmentCard.investmentAmount
+        })
 
         return investmentCard
       } catch (error) {
@@ -190,44 +150,28 @@ const loadInvestments = async () => {
     const results = await Promise.all(investmentPromises)
     const realInvestments = results.filter((inv) => inv !== null) as InvestmentCardData[]
     
-    console.log('[Load Investments] 真實數據載入完成，共', realInvestments.length, '個投資標的')
+    console.log('[Load Investments] 投資數據載入完成，共', realInvestments.length, '個投資標的')
+    console.log('[Load Investments] 最終投資數據:', realInvestments.map(inv => ({
+      projectName: inv.projectName,
+      unclaimedRewards: inv.unclaimedRewards,
+      investmentAmount: inv.investmentAmount
+    })))
     
-    // 更新為真實數據（只有當有真實投資時才替換 Mock 數據）
-    const wasMockData = isUsingMockData.value
+    // 更新為真實數據
+    investments.value = realInvestments
     
     if (realInvestments.length > 0) {
-      // 有真實投資數據，替換 Mock 數據
-      investments.value = realInvestments
-      isUsingMockData.value = false
-      
-      // 如果之前顯示的是 Mock 數據，顯示真實數據載入通知
-      if (wasMockData) {
-        showRealDataNotification.value = true
-        toast.success('真實投資數據已載入')
-        
-        // 3 秒後隱藏通知
-        setTimeout(() => {
-          showRealDataNotification.value = false
-        }, 3000)
-      }
+      toast.success(`成功載入 ${realInvestments.length} 個投資標的`)
     } else {
-      // 沒有真實投資，保持顯示 Mock 數據
-      console.log('[Load Investments] 用戶沒有真實投資，繼續顯示 Mock 數據')
-      if (investments.value.length === 0) {
-        investments.value = [...mockInvestments]
-        isUsingMockData.value = true
-      }
+      console.log('[Load Investments] 用戶目前沒有任何投資')
     }
   } catch (error: any) {
     console.error('載入投資標的失敗:', error)
     loadError.value = error.message || '載入失敗，請重試'
     toast.error('載入投資標的失敗')
     
-    // 如果載入失敗，保留 Mock 數據
-    if (investments.value.length === 0) {
-      investments.value = mockInvestments
-      isUsingMockData.value = true
-    }
+    // 載入失敗時清空數據
+    investments.value = []
   } finally {
     isLoadingInvestments.value = false
   }
@@ -238,21 +182,12 @@ watch([isConnected, account], async ([connected, acc], [wasConnected, wasAccount
   console.log('[Watch] 錢包狀態變化:', { connected, acc, wasConnected, wasAccount })
   
   if (connected && acc) {
-    // 立即顯示 Mock 數據
-    console.log('[Watch] 顯示 Mock 數據')
-    investments.value = [...mockInvestments]
-    isUsingMockData.value = true
-    
-    // 延遲一下再載入真實數據，確保 UI 先渲染
-    await nextTick()
-    
-    // 然後在背景載入真實數據
-    console.log('[Watch] 開始載入真實數據')
-    loadInvestments()
+    // 載入真實投資數據
+    console.log('[Watch] 開始載入投資數據')
+    await loadInvestments()
   } else {
     console.log('[Watch] 清空投資數據')
     investments.value = []
-    isUsingMockData.value = false
   }
 }, { immediate: true })
 
@@ -266,8 +201,8 @@ const totalInvestment = computed(() => {
   return investments.value.reduce((sum, inv) => sum + parseFloat(inv.investmentAmount), 0)
 })
 
-const totalClaimableRewards = computed(() => {
-  return investments.value.reduce((sum, inv) => sum + parseFloat(inv.claimableRewards), 0)
+const totalUnclaimedRewards = computed(() => {
+  return investments.value.reduce((sum, inv) => sum + parseFloat(inv.unclaimedRewards), 0)
 })
 
 const averageROI = computed(() => {
@@ -288,7 +223,7 @@ const handleWithdraw = async (investment: InvestmentCardData) => {
     return
   }
 
-  if (parseFloat(investment.claimableRewards) <= 0) {
+  if (parseFloat(investment.unclaimedRewards) <= 0) {
     toast.error('暫無可提取的收益')
     return
   }
@@ -306,7 +241,7 @@ const handleWithdraw = async (investment: InvestmentCardData) => {
       // 更新數據
       const index = investments.value.findIndex(inv => inv.id === investment.id)
       if (index !== -1 && investments.value[index]) {
-        investments.value[index].claimableRewards = '0'
+        investments.value[index].unclaimedRewards = '0'
       }
 
       toast.success(`成功提領收益！`)
@@ -318,7 +253,7 @@ const handleWithdraw = async (investment: InvestmentCardData) => {
       }
 
       // 重新載入餘額
-      await web3Store.updateBalance()
+      await Promise.all([updateBalance(), updateTokenBalance()])
     }
   } catch (error: any) {
     const errorMsg = error.message || '提領失敗，請重試'
@@ -538,7 +473,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
             <p class="text-sm text-gray-600">共 {{ investments.length }} 個投資標的</p>
           </Card>
 
-          <!-- Total Claimable Rewards -->
+          <!-- Total Unclaimed Rewards -->
           <Card class="p-6 bg-gradient-to-br from-primary/10 to-[#A4E2C2]/20 hover-lift shadow-soft border-primary/20">
             <div class="flex items-center gap-3 mb-4">
               <div class="p-3 bg-primary/20 rounded-lg">
@@ -547,7 +482,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
               <h3 class="text-lg font-semibold text-secondary">未提取收益</h3>
             </div>
             <p class="text-3xl font-bold text-[#FD773D] mb-1">
-              {{ totalClaimableRewards.toFixed(2) }} TWDT
+              {{ totalUnclaimedRewards.toFixed(2) }} TWDT
             </p>
             <p class="text-sm text-gray-600">可立即提領</p>
           </Card>
@@ -613,7 +548,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
                   class="p-1 hover:bg-gray-200 rounded transition-colors"
                   title="複製地址"
                 >
-                  <ExternalLink class="w-4 h-4 text-gray-500" />
+                  <Copy class="w-4 h-4 text-gray-500" />
                 </button>
                 <a
                   :href="getAddressLink(investment.contractAddress)"
@@ -656,12 +591,12 @@ const hasInvestments = computed(() => investments.value.length > 0)
               </div>
             </div>
 
-            <!-- Claimable Rewards -->
+            <!-- Unclaimed Rewards -->
             <div class="mb-4 p-4 bg-gradient-to-r from-primary/10 to-[#FD773D]/10 rounded-lg border border-primary/20">
               <div class="flex justify-between items-center mb-2">
                 <span class="text-sm font-medium text-secondary">未提取收益</span>
                 <span class="text-2xl font-bold text-[#FD773D]">
-                  {{ parseFloat(investment.claimableRewards).toFixed(2) }} TWDT
+                  {{ parseFloat(investment.unclaimedRewards).toFixed(2) }} TWDT
                 </span>
               </div>
               <p class="text-xs text-gray-600">可立即提領至您的錢包（TWDT 代幣）</p>
@@ -670,7 +605,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
             <!-- Withdraw Button -->
             <Button
               class="w-full bg-primary hover:bg-accent text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
-              :disabled="parseFloat(investment.claimableRewards) <= 0 || withdrawingIds.has(investment.id) || !isConnected || !isCorrectNetwork"
+              :disabled="parseFloat(investment.unclaimedRewards) <= 0 || withdrawingIds.has(investment.id) || !isConnected || !isCorrectNetwork"
               @click="handleWithdraw(investment)"
             >
               <Download 
@@ -678,7 +613,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
                 class="w-4 h-4 mr-2" 
               />
               <span v-if="withdrawingIds.has(investment.id)">處理中...</span>
-              <span v-else-if="parseFloat(investment.claimableRewards) <= 0">暫無可提取</span>
+              <span v-else-if="parseFloat(investment.unclaimedRewards) <= 0">暫無可提取</span>
               <span v-else-if="!isConnected">請連接錢包</span>
               <span v-else-if="!isCorrectNetwork">請切換網路</span>
               <span v-else>提領收益</span>
@@ -697,7 +632,7 @@ const hasInvestments = computed(() => investments.value.length > 0)
 
             <!-- Success Message -->
             <div
-              v-if="parseFloat(investment.claimableRewards) === 0 && !withdrawingIds.has(investment.id)"
+              v-if="parseFloat(investment.unclaimedRewards) === 0 && !withdrawingIds.has(investment.id)"
               class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg"
             >
               <div class="flex items-start gap-2">

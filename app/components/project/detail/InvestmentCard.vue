@@ -10,17 +10,23 @@ import { useWeb3Store } from '~/stores/web3'
 
 interface InvestmentCardProps {
   expectedROI: number
-  minInvestment: number
   projectId?: string
   isInDrawer?: boolean
+  contractAddress?: string
+  nftPrice: number
+  totalNft: number
+  mintedNft: number
 }
 
 const props = withDefaults(defineProps<InvestmentCardProps>(), {
   projectId: '1',
-  isInDrawer: false
+  isInDrawer: false,
+  nftPrice: 0,
+  totalNft: 0,
+  mintedNft: 0
 })
 
-// 使用 Web3 composable
+// 使用 Web3 composable（現在包含所有功能）
 const {
   connectWallet,
   disconnectWallet,
@@ -30,6 +36,7 @@ const {
   hasMetaMask,
   shortAccount,
   balance,
+  tokenBalance,
   error: web3Error,
   validateAmount,
   calculateReturn,
@@ -39,25 +46,72 @@ const {
 // 使用 Toast 通知
 const toast = useToast()
 
-// 使用 Web3 Store 來檢測 MetaMask
+// 使用 Web3 Store（僅用於持久化，可選）
 const web3Store = useWeb3Store()
 
-// 在組件掛載時檢測 MetaMask
-onMounted(() => {
-  web3Store.checkMetaMask()
-})
+// MetaMask 檢測已由 useWeb3 composable 處理（hasMetaMask）
 
-const investmentAmount = ref('')
+const nftQuantity = ref(1)
 const isInvesting = ref(false)
 const investmentError = ref<string | null>(null)
 const investmentSuccess = ref(false)
 const txHash = ref<string | null>(null)
 const showNetworkWarning = ref(false)
 
+// 計算剩餘可購買的 NFT 數量
+const availableNft = computed(() => {
+  return Math.max(0, props.totalNft - props.mintedNft)
+})
+
+// 計算總 TWDT 金額
+const totalAmount = computed(() => {
+  return nftQuantity.value * props.nftPrice
+})
+
 // 監聽網路狀態
 watch(isCorrectNetwork, (correct) => {
   showNetworkWarning.value = isConnected.value && !correct
 })
+
+// 增加 NFT 數量
+const increaseQuantity = () => {
+  if (nftQuantity.value < availableNft.value) {
+    nftQuantity.value++
+  }
+}
+
+// 減少 NFT 數量
+const decreaseQuantity = () => {
+  if (nftQuantity.value > 1) {
+    nftQuantity.value--
+  }
+}
+
+// 驗證 NFT 數量
+const validateNftQuantity = () => {
+  const quantity = nftQuantity.value
+  
+  if (!quantity || isNaN(quantity)) {
+    return { valid: false, error: '請輸入有效的數量' }
+  }
+  
+  if (quantity < 1) {
+    return { valid: false, error: 'NFT 數量必須至少為 1' }
+  }
+  
+  if (quantity > availableNft.value) {
+    return { valid: false, error: `剩餘可購買數量：${availableNft.value} 份` }
+  }
+  
+  // 檢查 TWDT 餘額
+  const tokenBal = parseFloat(tokenBalance.value)
+  const total = totalAmount.value
+  if (total > tokenBal) {
+    return { valid: false, error: `TWDT 餘額不足（當前餘額：${tokenBal.toFixed(2)}）` }
+  }
+  
+  return { valid: true }
+}
 
 // 連接錢包處理
 const handleConnectWallet = async () => {
@@ -71,11 +125,11 @@ const handleConnectWallet = async () => {
   }
 
   try {
-    const success = await connectWallet()
-    if (success) {
+    const result = await connectWallet()
+    if (result.success) {
       toast.success('錢包連接成功！')
     } else {
-      const errorMsg = '連接錢包失敗，請重試'
+      const errorMsg = result.error || '連接錢包失敗，請重試'
       investmentError.value = errorMsg
       toast.error(errorMsg)
     }
@@ -93,10 +147,10 @@ const handleInvest = async () => {
   investmentSuccess.value = false
   txHash.value = null
 
-  // 驗證金額
-  const validation = validateAmount(investmentAmount.value, props.minInvestment)
+  // 驗證 NFT 數量
+  const validation = validateNftQuantity()
   if (!validation.valid) {
-    const errorMsg = validation.error || '金額驗證失敗'
+    const errorMsg = validation.error || '數量驗證失敗'
     investmentError.value = errorMsg
     toast.error(errorMsg)
     return
@@ -106,19 +160,39 @@ const handleInvest = async () => {
   toast.info('正在處理交易，請在 MetaMask 中確認...')
 
   try {
-    // 確保金額是字符串格式
-    const amountStr = String(investmentAmount.value)
+    if (!props.contractAddress) {
+      throw new Error('缺少合約地址')
+    }
     
-    const result = await invest(props.projectId, amountStr)
+    // 調用新的 invest 函數，傳入 NFT 數量和單價
+    const result = await invest(
+      props.projectId, 
+      nftQuantity.value, 
+      props.nftPrice, 
+      props.contractAddress
+    )
     
     if (result.success && result.txHash) {
       investmentSuccess.value = true
       txHash.value = result.txHash
       toast.success('投資成功！交易已提交到區塊鏈')
       
+      // 同步 NFT 資料到後端
+      try {
+        await $fetch('/api/projects/syncNftData', {
+          method: 'POST',
+          body: {
+            projectId: props.projectId
+          }
+        })
+      } catch (syncError) {
+        // 靜默記錄錯誤，不影響使用者體驗
+        console.error('同步 NFT 資料失敗:', syncError)
+      }
+      
       // 5秒後清空表單
       setTimeout(() => {
-        investmentAmount.value = ''
+        nftQuantity.value = 1
         investmentSuccess.value = false
       }, 5000)
     } else {
@@ -137,10 +211,12 @@ const handleInvest = async () => {
 
 // 計算顯示的回報金額
 const expectedReturn = computed(() => {
-  if (!investmentAmount.value || parseFloat(investmentAmount.value) < props.minInvestment) {
+  if (nftQuantity.value < 1 || availableNft.value === 0) {
     return '0.0000'
   }
-  return calculateReturn(investmentAmount.value, props.expectedROI)
+  const total = totalAmount.value
+  const returnAmount = total * (1 + props.expectedROI / 100)
+  return returnAmount.toFixed(4)
 })
 
 // 檢查是否可以投資
@@ -148,9 +224,10 @@ const canInvest = computed(() => {
   return (
     isConnected.value &&
     isCorrectNetwork.value &&
-    investmentAmount.value &&
-    parseFloat(investmentAmount.value) >= props.minInvestment &&
-    !isInvesting.value
+    nftQuantity.value >= 1 &&
+    nftQuantity.value <= availableNft.value &&
+    !isInvesting.value &&
+    availableNft.value > 0
   )
 })
 </script>
@@ -244,40 +321,74 @@ const canInvest = computed(() => {
             地址：{{ shortAccount }}
           </p>
           <p class="text-xs text-secondary/70">
-            餘額：{{ balance }} ETH
+            餘額：{{ tokenBalance }} TWDT
           </p>
         </div>
 
-        <!-- 投資金額輸入 -->
-        <div>
-          <label for="investment-amount" class="text-sm font-medium text-secondary mb-2 block">
-            投資金額 (ETH)
-          </label>
-          <div class="relative mt-2">
-            <DollarSign class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary/60" />
-            <Input
-              id="investment-amount"
-              v-model="investmentAmount"
-              type="number"
-              step="0.001"
-              :placeholder="`最低 ${minInvestment} ETH`"
-              class="pl-10 border-primary/30 focus:border-primary"
-              :disabled="!isCorrectNetwork"
-            />
+        <!-- NFT 數量選擇 - 兩欄布局 (1:2 比例) -->
+        <div class="grid grid-cols-5 gap-6 items-center">
+          <!-- 左欄：NFT 價格資訊 (佔 1 份) -->
+          <div class="col-span-2 flex flex-col justify-center items-center p-4 bg-primary/5 rounded-lg border border-primary/20">
+            <div class="flex items-baseline gap-2">
+              <span class="text-3xl font-bold text-primary">$ {{ nftPrice }}</span>
+              <span class="text-sm text-secondary/70">TWDT</span>
+            </div>
+            <span class="text-sm text-secondary/70 mt-2">每份 NFT 價格</span>
           </div>
-          <p class="text-xs text-secondary/60 mt-1">
-            最低投資額：{{ minInvestment }} ETH
-          </p>
+          
+          <!-- 右欄：購買數量操作 (佔 2 份) -->
+          <div class="col-span-3">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium text-secondary">
+                購買數量
+              </label>
+              <span class="text-xs text-secondary/60">
+                剩餘 {{ availableNft }} / {{ totalNft }} 份
+              </span>
+            </div>
+            <div class="flex items-center gap-3">
+              <Button 
+                @click="decreaseQuantity" 
+                :disabled="nftQuantity <= 1 || !isCorrectNetwork"
+                class="w-12 h-12 bg-primary hover:bg-accent text-white disabled:bg-gray-300 disabled:cursor-not-allowed text-xl font-bold flex-shrink-0"
+              >
+                -
+              </Button>
+              <Input
+                v-model.number="nftQuantity"
+                type="number"
+                min="1"
+                :max="availableNft"
+                class="h-12 text-center text-lg font-semibold border-primary/30 focus:border-primary"
+                :disabled="!isCorrectNetwork"
+              />
+              <Button 
+                @click="increaseQuantity" 
+                :disabled="nftQuantity >= availableNft || !isCorrectNetwork"
+                class="w-12 h-12 bg-primary hover:bg-accent text-white disabled:bg-gray-300 disabled:cursor-not-allowed text-xl font-bold flex-shrink-0"
+              >
+                +
+              </Button>
+            </div>
+          </div>
         </div>
 
         <!-- 投資預覽 -->
         <div 
-          v-if="investmentAmount && Number(investmentAmount) >= minInvestment" 
+          v-if="nftQuantity >= 1 && availableNft > 0" 
           class="p-4 bg-chart-3/10 rounded-lg border border-chart-3/30"
         >
           <div class="flex justify-between items-center mb-2">
-            <span class="text-sm text-secondary/70">投資金額</span>
-            <span class="text-secondary font-medium">{{ investmentAmount }} ETH</span>
+            <span class="text-sm text-secondary/70">購買數量</span>
+            <span class="text-secondary font-medium">{{ nftQuantity }} 份 NFT</span>
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-secondary/70">單價</span>
+            <span class="text-secondary font-medium">{{ nftPrice }} TWDT</span>
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-secondary/70">總金額</span>
+            <span class="text-secondary font-semibold">{{ totalAmount.toFixed(4) }} TWDT</span>
           </div>
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm text-secondary/70">預期 ROI</span>
@@ -287,7 +398,7 @@ const canInvest = computed(() => {
           <div class="flex justify-between items-center">
             <span class="text-secondary font-medium">預期回報</span>
             <span class="text-primary font-bold text-lg">
-              {{ expectedReturn }} ETH
+              {{ expectedReturn }} TWDT
             </span>
           </div>
         </div>
@@ -306,13 +417,12 @@ const canInvest = computed(() => {
             <CheckCircle class="w-4 h-4 text-green-600 mt-0.5" />
             <div class="flex-1">
               <p class="text-sm text-green-900 font-medium">投資成功！</p>
-              <a 
-                :href="getTransactionUrl(txHash)" 
-                target="_blank"
+              <NuxtLink 
+                to="/investor"
                 class="text-xs text-green-700 hover:text-green-800 inline-flex items-center gap-1 mt-1"
               >
                 查看交易 <ExternalLink class="w-3 h-3" />
-              </a>
+              </NuxtLink>
             </div>
           </div>
         </div>

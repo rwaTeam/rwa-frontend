@@ -2,6 +2,8 @@
 import { ArrowLeft, Leaf, Twitter, Github, Linkedin, TrendingUp } from 'lucide-vue-next'
 import Button from '~/components/ui/button/Button.vue'
 import Drawer from '~/components/ui/drawer/Drawer.vue'
+import Card from '~/components/ui/card/Card.vue'
+import Badge from '~/components/ui/badge/Badge.vue'
 import HeroSection from '~/components/project/detail/HeroSection.vue'
 import FarmerProfile from '~/components/project/detail/FarmerProfile.vue'
 import ProjectAbout from '~/components/project/detail/ProjectAbout.vue'
@@ -13,6 +15,7 @@ import InvestmentCard from '~/components/project/detail/InvestmentCard.vue'
 import RelatedProjects from '~/components/project/detail/RelatedProjects.vue'
 import { useProjectsStore } from '~/stores/projects'
 import { useContractData } from '~/composables/useContractData'
+import { useProjectProgress } from '~/composables/useProjectProgress'
 import type { ApiProject, ContractData } from '~/types/project'
 
 // 取得路由參數
@@ -62,6 +65,7 @@ const normalizeProject = (project: any): ApiProject => {
     description: project.description || '',
     total_nft: project.total_nft || 1000,
     nft_price: project.nft_price || 0.001,
+    minted_nft: project.minted_nft || project.mintedNFTs || 0,
     insurance_company: project.insuranceProvider || project.insurance_company || '',
     status: project.status || '開放中',
     crop_name: project.cropType || project.crop_name || '',
@@ -89,15 +93,15 @@ const loadProjectData = async () => {
     // 如果 store 沒有，嘗試從 API 取得
     if (!project) {
       try {
-        const { data } = await useFetch<ApiProject>(`/api/getProject/${projectId}`, {
+        const data = await $fetch<ApiProject>(`/api/getProject/${projectId}`, {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
         })
         
-        if (data.value) {
-          project = data.value
+        if (data) {
+          project = data
           projectsStore.addProject(project)
         }
       } catch (apiError) {
@@ -327,6 +331,65 @@ const transparencyData = computed(() => detailData.value?._transparencyData || {
   transactions: [],
 })
 
+// 募資進度（TWDT 顯示）
+const { getProjectProgress } = useProjectProgress()
+const progressData = ref<any | null>(null)
+const progressLoading = ref(false)
+const progressError = ref<string | null>(null)
+
+const loadProgress = async () => {
+  const addr = transparencyData.value.contractAddress
+  if (!addr) {
+    progressData.value = null
+    return
+  }
+  progressLoading.value = true
+  progressError.value = null
+  try {
+    const data = await getProjectProgress(addr)
+    progressData.value = data
+  } catch (e: any) {
+    progressError.value = e?.message || '載入進度失敗'
+    progressData.value = null
+  } finally {
+    progressLoading.value = false
+  }
+}
+
+watch(() => transparencyData.value.contractAddress, () => {
+  loadProgress()
+})
+
+onMounted(() => {
+  loadProgress()
+})
+
+const percentage = computed(() => {
+  return progressData.value?.percentage || 0
+})
+
+const targetTwdt = computed(() => {
+  if (!apiProject.value) return 0
+  const total = apiProject.value.total_nft || 0
+  const price = apiProject.value.nft_price || 0
+  return total * price
+})
+
+const currentTwdt = computed(() => {
+  if (!apiProject.value || !progressData.value) return 0
+  const minted = progressData.value.mintedNFTs || 0
+  const price = apiProject.value.nft_price || 0
+  return minted * price
+})
+
+const formatTwdt = (n: number) => {
+  try {
+    return Number(n).toLocaleString('en-US', { maximumFractionDigits: 4 })
+  } catch {
+    return String(n)
+  }
+}
+
 const hasInvested = ref(false)
 const investmentStatus = computed(() => ({
   hasInvested: false,
@@ -334,7 +397,7 @@ const investmentStatus = computed(() => ({
   estimatedROI: projectData.value.expectedROI,
   projectProgress: 35,
   expectedReturnDate: projectData.value.endDate || "2025年7月15日",
-  claimableRewards: 0,
+  unclaimedRewards: 0,
 }))
 
 const relatedProjects = ref([
@@ -471,6 +534,45 @@ const showInvestmentDrawer = ref(false)
             :cover-image="projectData.coverImage"
           />
 
+          <!-- 募資進度 (TWDT) -->
+          <Card class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-semibold text-secondary">募資進度</h3>
+              <Badge :variant="percentage >= 100 ? 'default' : 'outline'" class="text-sm">{{ percentage }}%</Badge>
+            </div>
+
+            <!-- 載入中骨架 -->
+            <div v-if="progressLoading" class="space-y-3">
+              <div class="h-4 bg-secondary/10 rounded animate-pulse" />
+              <div class="h-8 bg-secondary/10 rounded animate-pulse" />
+            </div>
+
+            <!-- 內容 -->
+            <div v-else class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <p class="text-xs text-secondary/60">募資目標</p>
+                  <p class="text-lg font-semibold text-secondary">{{ formatTwdt(targetTwdt) }} TWDT</p>
+                </div>
+                <div>
+                  <p class="text-xs text-secondary/60">當前募資</p>
+                  <p class="text-lg font-semibold text-secondary">{{ formatTwdt(currentTwdt) }} TWDT</p>
+                </div>
+              </div>
+
+              <div class="h-3 bg-secondary/10 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out"
+                  :style="{ width: `${percentage}%` }"
+                />
+              </div>
+
+              <div v-if="progressError" class="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <p class="text-xs text-orange-800">{{ progressError }}</p>
+              </div>
+            </div>
+          </Card>
+
           <!-- Farmer Profile -->
           <FarmerProfile
             :name="farmerData.name"
@@ -521,7 +623,7 @@ const showInvestmentDrawer = ref(false)
             :estimated-r-o-i="investmentStatus.estimatedROI"
             :project-progress="investmentStatus.projectProgress"
             :expected-return-date="investmentStatus.expectedReturnDate"
-            :claimable-rewards="investmentStatus.claimableRewards"
+            :unclaimed-rewards="investmentStatus.unclaimedRewards"
           />
         </div>
 
@@ -529,8 +631,11 @@ const showInvestmentDrawer = ref(false)
         <div class="hidden lg:block lg:col-span-1">
           <InvestmentCard
             :expected-r-o-i="projectData.expectedROI"
-            :min-investment="projectData.minInvestment"
             :project-id="projectId as string"
+            :contract-address="transparencyData.contractAddress"
+            :nft-price="apiProject?.nft_price || 0"
+            :total-nft="apiProject?.total_nft || 0"
+            :minted-nft="progressData?.mintedNFTs || apiProject?.minted_nft || 0"
           />
         </div>
       </div>
@@ -674,9 +779,12 @@ const showInvestmentDrawer = ref(false)
     <Drawer v-model:open="showInvestmentDrawer" title="投資專案">
       <InvestmentCard
         :expected-r-o-i="projectData.expectedROI"
-        :min-investment="projectData.minInvestment"
         :project-id="projectId as string"
         :is-in-drawer="true"
+        :contract-address="transparencyData.contractAddress"
+        :nft-price="apiProject?.nft_price || 0"
+        :total-nft="apiProject?.total_nft || 0"
+        :minted-nft="progressData?.mintedNFTs || apiProject?.minted_nft || 0"
       />
     </Drawer>
   </div>

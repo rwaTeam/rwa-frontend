@@ -5,6 +5,7 @@ export const CONTRACT_CONFIG = {
   
   // TWDT 代幣地址（用於支付或獎勵）
   TWDT_TOKEN_ADDRESS: '0x30f97ba99AfE8db807aaCdC9d8513FDfD2507738',
+  TWDT_DECIMALS: 6, // TWDT 代幣精度
 
   // Sepolia 測試網配置
   CHAIN_ID: 11155111,

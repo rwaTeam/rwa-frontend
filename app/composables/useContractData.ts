@@ -72,13 +72,13 @@ export function useContractData() {
       }
 
       // 嘗試讀取合約的 getDeposit 方法
-      // 注意：這需要合約實例和 ABI，目前 ABI 中確實有 getDeposit 方法
+      // 使用 SafeHarvestNFT ABI
       const provider = getProvider()
-      const ABI = await import('~/config/ABI.json')
+      const ABI = await import('~/config/SafeHarvestNFT_ABI.json')
       const contract = new ethers.Contract(contractAddress, ABI.default || ABI, provider)
       
       try {
-        const deposit = await contract.getDeposit()
+        const deposit = await (contract as any).getDeposit()
         return ethers.formatEther(deposit)
       } catch {
         // 如果合約沒有這個方法或方法不存在，返回 undefined

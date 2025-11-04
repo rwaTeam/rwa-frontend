@@ -10,7 +10,7 @@ interface InvestmentStatusProps {
   estimatedROI: number
   projectProgress: number
   expectedReturnDate: string
-  claimableRewards: number
+  unclaimedRewards: number
 }
 
 const props = defineProps<InvestmentStatusProps>()
@@ -81,17 +81,17 @@ const props = defineProps<InvestmentStatusProps>()
       <div class="flex items-center justify-between p-4 bg-white rounded-lg">
         <div>
           <p class="text-sm text-secondary/70 mb-1">
-            可領取獎勵
+            未提取收益
           </p>
           <p class="text-xl text-primary">
-            ${{ claimableRewards.toLocaleString() }}
+            ${{ unclaimedRewards.toLocaleString() }}
           </p>
         </div>
         <Button
-          :disabled="claimableRewards === 0"
+          :disabled="unclaimedRewards === 0"
           class="bg-primary hover:bg-accent text-white disabled:bg-gray-300"
         >
-          {{ claimableRewards === 0 ? '暫無可領取' : '領取獎勵' }}
+          {{ unclaimedRewards === 0 ? '暫無可領取' : '領取獎勵' }}
         </Button>
       </div>
     </Card>

@@ -47,7 +47,13 @@ export default defineNuxtConfig({
       commonjsOptions: {
         transformMixedEsModules: true
       }
-    }
+    },
+    // 🔥 新增：在開發模式下排除 ethers 的 HMR
+    server: {
+      watch: {
+        ignored: ['**/node_modules/ethers/**']
+      }
+    },
   },
   modules: [
     '@nuxtjs/tailwindcss',
@@ -55,7 +61,6 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@vueuse/motion/nuxt',
     '@pinia/nuxt',
-    // '@nuxt/eslint'
   ],
   shadcn: {
     /**

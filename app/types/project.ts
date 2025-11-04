@@ -23,6 +23,7 @@ export interface ApiProject {
   description: string
   total_nft: number
   nft_price: number
+  minted_nft?: number
   insurance_company: string
   status: string
   crop_name: string
@@ -58,9 +59,9 @@ export interface ProjectOnChainData {
 export interface InvestorProject extends ApiProject {
   // 鏈上數據
   nftBalance: number  // 持有的 NFT 數量
-  claimableRewards: string  // 可提領收益（ETH）
+  unclaimedRewards: string  // 未提取收益（TWDT）
   projectProgress: number  // 項目進度（百分比）
-  investmentAmount: string  // 投資金額（ETH）
+  investmentAmount: string  // 投資金額（TWDT）
   onChainData?: ProjectOnChainData  // 完整的鏈上數據
 }
 
@@ -70,8 +71,8 @@ export interface InvestmentCardData {
   projectName: string
   projectImage: string
   contractAddress: string
-  investmentAmount: string  // ETH
-  claimableRewards: string  // ETH
+  investmentAmount: string  // TWDT
+  unclaimedRewards: string  // 未提取收益（TWDT）
   expectedROI: number  // 百分比
   projectProgress: number  // 百分比
   status: 'active' | 'completed' | 'pending'
