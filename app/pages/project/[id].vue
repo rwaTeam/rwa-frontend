@@ -175,8 +175,8 @@ const transformToDetailData = (apiProject: ApiProject, contractData?: ContractDa
       startDate: formatDate(startDate),
       endDate: formatDate(endDate),
       expectedROI,
-      status: (apiProject.status === '開放中' || apiProject.status === '已募資' || apiProject.status === '即將推出') 
-        ? apiProject.status as '開放中' | '已募資' | '即將推出'
+      status: apiProject.status_display
+        ? apiProject.status_display as '開放中' | '已達標' | '即將推出'
         : '開放中' as const,
       coverImage: apiProject.imageURL || "https://plus.unsplash.com/premium_photo-1661823013705-d58ac4788630?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1740",
       minInvestment: 0.001,

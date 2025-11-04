@@ -25,7 +25,7 @@ export interface ApiProject {
   nft_price: number
   minted_nft?: number
   insurance_company: string
-  status: string
+  status_display: string
   crop_name: string
 }
 
